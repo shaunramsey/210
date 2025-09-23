@@ -14,12 +14,8 @@ import 'car.dart';
 
 //import 'train_car.dart';
 
-
-
-
-
 //data encapsulation (hidden information)
-//polymorphism 
+//polymorphism
 
 /*
 String 
@@ -30,10 +26,7 @@ String
 
 */
 
-
-
 void main() {
-
   Car myCar = Car();
   Vehicle racer = Car();
   print("mycar:");
@@ -57,11 +50,23 @@ void main() {
   racer.speed = 5;
   Car newCar = myCar;
   print("newCar speed is ${newCar.speed}");
-  
+
   //racer + myCar => ?
-  if(myCar == newCar) {
+  if (myCar == newCar) {
     print("they are the same");
   } else {
     print("They are not the same");
+  }
+
+  if (1 == 2) {
+    print("1 isn't 2");
+  } else {
+    print("1 is 2");
+  }
+
+  if (6 == 7) {
+    print("This is how we want things");
+  } else {
+    print("okay");
   }
 }

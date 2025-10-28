@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /* STEPS FOR Shared_Preferences
 1.) add the package from pub.dev to your pubspec.yaml. You can edit pubspec.yaml directly or use:
 flutter pub add shared_preferences
+1b) also get the package
+flutter pub get
 2) import the package so you can use its features
 import 'package:shared_preferences/shared_preferences.dart';
 3) use the features

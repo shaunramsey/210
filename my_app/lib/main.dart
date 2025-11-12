@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'my_container.dart';
 import 'my_title.dart';
 import 'my_resource.dart';
+import 'item.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,17 +39,17 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   final List<int> _events = [0, 0, 0, 0];
-  final List<int> _items = [0, 0, 0, 0, 0];
-  final List<int> _costs = [1, 20, 100, 100, 40];
-  final List<String> _names = [
-    "Bucket",
-    "Electrolyzer",
-    "Solar Panel",
-    "Pump",
-    "Battery",
+  final List<Item> _items = [
+    Item("Bucket", 0, 0, 1, -1, 1),
+    Item("Electrolyzer", 0, 0, 20, -1, 1),
+    Item("Solar Panel", 1, 1, 100, -1, 1000000),
+    Item("Pump", -0.9, 0, 100, 0, 1000000),
+    Item("Battery", 0, 10, 50, -1, 1000000),
+    Item("Sensors", 0.1, 0, 50, -1, 1),
   ];
+
   final List<int> _resourcePrices = [0, 0, 0, 0];
-  final List<String> _resourceNames = ["Water", "H2", "O2"];
+  final List<String> _resourceNames = ["Water", "H2", "O2", "TBD"];
   final Random _rng = Random();
   //Timer? _timer;
   late SharedPreferences _prefs;
@@ -60,21 +61,26 @@ class _MyHomePageState extends State<MyHomePage>
   int _quanta = 0;
   int _energy = 0;
 
+  String dropdownValue = "Default";
+  List<String> dropdownList = <String>['Default', 'One', 'Two', 'Three'];
+
   void setPrefs() {
+    debugPrint("The current save file is: $dropdownValue");
+    //note to self - MAKE SURE TO ADD THE OTHER ITEMS INTO SHARD PREFERENCES
     _prefs.setInt('h2o', _h2o);
     _prefs.setInt('o2', _o2);
     _prefs.setInt('h2', _h2);
     _prefs.setInt('energy', _energy);
     _prefs.setInt('quanta', _quanta);
-    _prefs.setInt('items0', _items[0]);
-    _prefs.setInt('items1', _items[1]);
+    for (int i = 0; i < _items.length; i++) {
+      _prefs.setInt('items$i', _items[i].count);
+    }
   }
 
   void gatherWater() async {
     setState(() {
       _h2o++;
     });
-    setPrefs();
   }
 
   void electrolyzeWater() async {
@@ -89,7 +95,6 @@ class _MyHomePageState extends State<MyHomePage>
             "A stranger is here, begging for oxygen. \n Take what is offered and give 20 oxygen \nOR\n wait for the inevitable and take what is left.";
       }
     });
-    setPrefs();
   }
 
   void _marketTimer() {
@@ -103,6 +108,61 @@ class _MyHomePageState extends State<MyHomePage>
     });
   }
 
+  int _getMaxEnergy() {
+    int sum = 0;
+    for (int i = 0; i < _items.length; i++) {
+      sum += _items[i].chargeReserve * _items[i].count;
+    }
+    //debugPrint("_getMaxEnergy $sum");
+    return sum;
+  }
+
+  void _energyTimer() {
+    Timer.periodic(Duration(seconds: 1), (timer) {
+      double negativeDelta = 0;
+      double positiveDelta = 0;
+      for (int i = 0; i < _items.length; i++) {
+        if (_items[i].chargePerSecond > 0) {
+          positiveDelta += _items[i].count * _items[i].chargePerSecond;
+        } else {
+          negativeDelta += _items[i].count * _items[i].chargePerSecond;
+          //add up solar panels and drains and the like
+        }
+      }
+      debugPrint("b4 $_energy $positiveDelta $negativeDelta");
+      int startEnergy = _energy;
+      _energy += (positiveDelta + negativeDelta).floor();
+      debugPrint("af $_energy");
+      if (_energy > _getMaxEnergy()) {
+        _energy = _getMaxEnergy();
+      }
+      if (_energy < 0) {
+        _energy = 0;
+      }
+
+      if (_energy > 0) {
+        //then we have energy to do stuff
+        for (int i = 0; i < _items.length; i++) {
+          List<int> rg = _items[i].generateResources();
+          _h2o += rg[0];
+          _h2 += rg[1];
+          _o2 += rg[2];
+        }
+      } else {
+        debugPrint("0 < $_energy ${positiveDelta.floor()}");
+        _energy = startEnergy + positiveDelta.floor();
+      }
+
+      setState(() {});
+    });
+  }
+
+  void _saveTimer() {
+    Timer.periodic(Duration(seconds: 5), (timer) {
+      setPrefs();
+    });
+  }
+
   Future<void> _initSharedPreferences() async {
     _prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -111,8 +171,9 @@ class _MyHomePageState extends State<MyHomePage>
       _h2 = _prefs.getInt('h2') ?? 0;
       _quanta = _prefs.getInt('quanta') ?? 1;
       _energy = _prefs.getInt('energy') ?? 0;
-      _items[0] = _prefs.getInt('items0') ?? 0;
-      _items[1] = _prefs.getInt('items1') ?? 0;
+      for (int i = 0; i < _items.length; i++) {
+        _items[i].count = _prefs.getInt('items$i') ?? 0;
+      }
     });
   }
 
@@ -122,6 +183,8 @@ class _MyHomePageState extends State<MyHomePage>
     _tabController = TabController(length: 3, vsync: this);
     _initSharedPreferences();
     _marketTimer();
+    _energyTimer();
+    _saveTimer();
   }
 
   @override
@@ -134,8 +197,8 @@ class _MyHomePageState extends State<MyHomePage>
   Widget build(BuildContext context) {
     List<Widget> itemList = [];
     for (int i = 0; i < _items.length; i++) {
-      if (_items[i] > 0) {
-        itemList.add(Text(_names[i]));
+      if (_items[i].count > 0) {
+        itemList.add(Text(_items[i].name));
       }
     }
     return DefaultTabController(
@@ -155,8 +218,40 @@ class _MyHomePageState extends State<MyHomePage>
                 child: Text('The Chemistry Set'),
               ),
               ListTile(
-                title: const Text('Save Progress (auto)'),
-                tileColor: Colors.grey,
+                leading: const Icon(Icons.save_as),
+                title: Theme(
+                  data: Theme.of(context).copyWith(
+                    splashColor: Colors.green,
+                    highlightColor: Colors.green,
+                    hoverColor: Colors.green,
+                    canvasColor: Colors.green[100],
+                    focusColor: Colors.white,
+                  ),
+                  child: DropdownButton<String>(
+                    value: dropdownValue,
+                    icon: const Icon(Icons.arrow_downward),
+                    elevation: 16,
+                    style: const TextStyle(
+                      color: Color.fromARGB(255, 0, 82, 3),
+                    ),
+                    underline: Container(height: 2, color: Colors.green),
+                    onChanged: (String? value) {
+                      // This is called when the user selects an item.
+                      setState(() {
+                        dropdownValue = value!;
+                      });
+                    },
+                    items: dropdownList.map<DropdownMenuItem<String>>((
+                      String value,
+                    ) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                tileColor: Colors.white,
                 onTap: null,
               ),
               ListTile(
@@ -168,8 +263,19 @@ class _MyHomePageState extends State<MyHomePage>
                   _h2 = 0;
                   _quanta = 1;
                   for (int i = 0; i < _items.length; i++) {
-                    _items[i] = 0;
+                    _items[i].count = 0;
                   }
+                  setState(() {});
+                },
+              ),
+              ListTile(
+                title: const Text('Cheat Resources'),
+                tileColor: Colors.orange,
+                onTap: () {
+                  _h2o += 100;
+                  _o2 += 100;
+                  _h2 += 100;
+                  _quanta += 1000;
                   setState(() {});
                 },
               ),
@@ -182,7 +288,7 @@ class _MyHomePageState extends State<MyHomePage>
                   _h2 += 1000;
                   _quanta = 1000;
                   for (int i = 0; i < _items.length; i++) {
-                    _items[i] = 10;
+                    _items[i].count = 10;
                   }
                   setState(() {});
                 },
@@ -203,15 +309,14 @@ class _MyHomePageState extends State<MyHomePage>
                 Tab(icon: Icon(Icons.message)),
               ],
             ),
-            _items[2] > 0
+            _items[2].count > 0
                 ? Container(
                     color: Colors.yellow,
                     child: Row(
                       children: [
                         MyResource(
                           title: "Energy",
-                          resource:
-                              "$_energy / ${_items[2] * 10 + _items[4] * 100}",
+                          resource: "$_energy / ${_getMaxEnergy()}",
                         ),
                       ],
                     ),
@@ -233,77 +338,35 @@ class _MyHomePageState extends State<MyHomePage>
                             children: <Widget>[
                               MyResource(title: "Quanta", resource: "$_quanta"),
                               SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: _items[0] > 0 || _quanta < _costs[0]
-                                    ? null
-                                    : () {
-                                        _items[0]++;
-                                        _quanta -= _costs[0];
-                                        setPrefs();
-                                        setState(() {});
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: Size(200, 30),
+                              for (
+                                int index = 0;
+                                index < _items.length;
+                                index++
+                              )
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: ElevatedButton(
+                                    onPressed:
+                                        _items[index].count >=
+                                                _items[index].stackLimit ||
+                                            _quanta < _items[index].cost
+                                        ? null
+                                        : () {
+                                            _items[index].count++;
+                                            _quanta -= _items[index].cost;
+                                            setState(() {});
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      fixedSize: Size(250, 30),
+                                    ),
+                                    child: Text(
+                                      _items[index].count >=
+                                              _items[index].stackLimit
+                                          ? "${_items[index].name} - ${_items[index].count} Owned"
+                                          : "Buy ${_items[index].name} [${_items[index].count}]: ${_items[index].cost}",
+                                    ),
+                                  ),
                                 ),
-                                child: Text(
-                                  _items[0] == 0
-                                      ? "Buy ${_names[0]}: ${_costs[0]}"
-                                      : "${_names[0]} Owned",
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: _items[1] > 0 || _quanta < _costs[1]
-                                    ? null
-                                    : () {
-                                        _items[1]++;
-                                        _quanta -= _costs[1];
-                                        setPrefs();
-                                        setState(() {});
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: Size(200, 30),
-                                ),
-                                child: Text(
-                                  _items[1] == 0
-                                      ? "Buy ${_names[1]}: ${_costs[1]}"
-                                      : "${_names[1]} Owned",
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: _quanta < _costs[2]
-                                    ? null
-                                    : () {
-                                        _items[2]++;
-                                        _quanta -= _costs[2];
-                                        setPrefs();
-                                        setState(() {});
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: Size(200, 50),
-                                ),
-                                child: Text(
-                                  "Buy ${_names[2]}: ${_costs[2]}\n   ${_items[2]} Owned",
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: _quanta < _costs[3]
-                                    ? null
-                                    : () {
-                                        _items[3]++;
-                                        _quanta -= _costs[3];
-                                        setPrefs();
-                                        setState(() {});
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: Size(200, 50),
-                                ),
-                                child: Text(
-                                  "Buy ${_names[3]}: ${_costs[3]}\n   ${_items[3]} Owned",
-                                ),
-                              ),
                             ],
                           ),
                         ),
@@ -316,7 +379,6 @@ class _MyHomePageState extends State<MyHomePage>
                                     ? () {
                                         _h2o--;
                                         _quanta += _resourcePrices[0];
-                                        setPrefs();
                                         setState(() {});
                                       }
                                     : null,
@@ -334,7 +396,6 @@ class _MyHomePageState extends State<MyHomePage>
                                     ? () {
                                         _h2--;
                                         _quanta += _resourcePrices[1];
-                                        setPrefs();
                                         setState(() {});
                                       }
                                     : null,
@@ -352,7 +413,6 @@ class _MyHomePageState extends State<MyHomePage>
                                     ? () {
                                         _o2--;
                                         _quanta += _resourcePrices[2];
-                                        setPrefs();
                                         setState(() {});
                                       }
                                     : null,
@@ -394,7 +454,7 @@ class _MyHomePageState extends State<MyHomePage>
                                   MyResource(title: "h2", resource: "$_h2"),
                                   MyResource(title: "o2", resource: "$_o2"),
                                   SizedBox(height: 10),
-                                  _items[0] > 0
+                                  _items[0].count > 0
                                       ? ElevatedButton(
                                           onPressed: gatherWater,
                                           style: ElevatedButton.styleFrom(
@@ -404,7 +464,7 @@ class _MyHomePageState extends State<MyHomePage>
                                         )
                                       : SizedBox(),
                                   SizedBox(height: 10),
-                                  _items[1] > 0
+                                  _items[1].count > 0
                                       ? ElevatedButton(
                                           onPressed: _h2o >= 2
                                               ? electrolyzeWater

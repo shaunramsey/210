@@ -7,7 +7,7 @@ class MyResource extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 152,
+      //width: 152,
       child: Row(
         children: [
           SizedBox(
@@ -18,7 +18,7 @@ class MyResource extends StatelessWidget {
             ),
           ),
           SizedBox(width: 5),
-          SizedBox(width: 50, child: Text(resource)),
+          SizedBox(child: Text(resource)),
         ],
       ),
     );

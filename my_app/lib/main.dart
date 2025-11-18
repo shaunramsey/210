@@ -6,8 +6,40 @@ import 'my_container.dart';
 import 'my_title.dart';
 import 'my_resource.dart';
 import 'item.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+//go to firebase console and make a new project
+// --- give it an ame
+// --- I didn't enable gemini
+// --- I DID turn on analytics
+
+//connect things up -- get firebase cli
+//https://firebase.google.com/docs/cli#setup_update_cli
+//I used automated: https://firebase.google.com/docs/cli#setup_update_cli
+
+//following these steps https://firebase.google.com/docs/auth/flutter/start
+
+//things you can follow instead: https://firebase.google.com/codelabs/firebase-auth-in-flutter-apps#4
+
+//hosting:
+//flutter build web --release
+//install firebase-tools
+//firebase login
+//firebase init hosting
+// -- connect to fb project
+// -- build/web for the build dir
+// -- Yes single page app
+// -- builds. no to github automation
+
+// firebase build web --release
+// firebase deply --only hosting
+// now you can go visit your website from the hosting URL
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -48,6 +80,8 @@ class _MyHomePageState extends State<MyHomePage>
     Item("Sensors", 0.1, 0, 50, -1, 1),
   ];
 
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
   final List<int> _resourcePrices = [0, 0, 0, 0];
   final List<String> _resourceNames = ["Water", "H2", "O2", "TBD"];
   final Random _rng = Random();
@@ -129,10 +163,10 @@ class _MyHomePageState extends State<MyHomePage>
           //add up solar panels and drains and the like
         }
       }
-      debugPrint("b4 $_energy $positiveDelta $negativeDelta");
+      //debugPrint("b4 $_energy $positiveDelta $negativeDelta");
       int startEnergy = _energy;
       _energy += (positiveDelta + negativeDelta).floor();
-      debugPrint("af $_energy");
+      //debugPrint("af $_energy");
       if (_energy > _getMaxEnergy()) {
         _energy = _getMaxEnergy();
       }
@@ -144,9 +178,9 @@ class _MyHomePageState extends State<MyHomePage>
         //then we have energy to do stuff
         for (int i = 0; i < _items.length; i++) {
           List<int> rg = _items[i].generateResources();
-          _h2o += rg[0];
-          _h2 += rg[1];
-          _o2 += rg[2];
+          _h2o += rg[0] * _items[i].count;
+          _h2 += rg[1] * _items[i].count;
+          _o2 += rg[2] * _items[i].count;
         }
       } else {
         debugPrint("0 < $_energy ${positiveDelta.floor()}");
@@ -201,332 +235,447 @@ class _MyHomePageState extends State<MyHomePage>
         itemList.add(Text(_items[i].name));
       }
     }
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
-        ),
-        drawer: Drawer(
-          child: ListView(
-            // Important: Remove any padding from the ListView.
-            padding: EdgeInsets.zero,
-            children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(color: Colors.green),
-                child: Text('The Chemistry Set'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.save_as),
-                title: Theme(
-                  data: Theme.of(context).copyWith(
-                    splashColor: Colors.green,
-                    highlightColor: Colors.green,
-                    hoverColor: Colors.green,
-                    canvasColor: Colors.green[100],
-                    focusColor: Colors.white,
-                  ),
-                  child: DropdownButton<String>(
-                    value: dropdownValue,
-                    icon: const Icon(Icons.arrow_downward),
-                    elevation: 16,
-                    style: const TextStyle(
-                      color: Color.fromARGB(255, 0, 82, 3),
-                    ),
-                    underline: Container(height: 2, color: Colors.green),
-                    onChanged: (String? value) {
-                      // This is called when the user selects an item.
-                      setState(() {
-                        dropdownValue = value!;
-                      });
-                    },
-                    items: dropdownList.map<DropdownMenuItem<String>>((
-                      String value,
-                    ) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                ),
-                tileColor: Colors.white,
-                onTap: null,
-              ),
-              ListTile(
-                title: const Text('Reset Progress'),
-                tileColor: Colors.red,
-                onTap: () {
-                  _h2o = 0;
-                  _o2 = 0;
-                  _h2 = 0;
-                  _quanta = 1;
-                  for (int i = 0; i < _items.length; i++) {
-                    _items[i].count = 0;
-                  }
-                  setState(() {});
-                },
-              ),
-              ListTile(
-                title: const Text('Cheat Resources'),
-                tileColor: Colors.orange,
-                onTap: () {
-                  _h2o += 100;
-                  _o2 += 100;
-                  _h2 += 100;
-                  _quanta += 1000;
-                  setState(() {});
-                },
-              ),
-              ListTile(
-                title: const Text('Cheat Progress'),
-                tileColor: Colors.orange,
-                onTap: () {
-                  _h2o += 1000;
-                  _o2 += 1000;
-                  _h2 += 1000;
-                  _quanta = 1000;
-                  for (int i = 0; i < _items.length; i++) {
-                    _items[i].count = 10;
-                  }
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            TabBar(
-              controller: _tabController,
-              labelColor: Colors.green,
-              unselectedLabelColor: Colors.blue[300],
-              indicatorColor: Colors.green[900],
-              tabs: [
-                Tab(icon: Icon(Icons.shop)),
-                Tab(icon: Icon(Icons.inventory)),
-                Tab(icon: Icon(Icons.message)),
-              ],
+    return StreamBuilder(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+              title: Text(widget.title),
             ),
-            _items[2].count > 0
-                ? Container(
-                    color: Colors.yellow,
-                    child: Row(
-                      children: [
-                        MyResource(
-                          title: "Energy",
-                          resource: "$_energy / ${_getMaxEnergy()}",
-                        ),
-                      ],
-                    ),
-                  )
-                : SizedBox(),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
+            body: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
                 children: [
-                  Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        //the shop and the market
-                        MyContainer(
-                          // the shop
-                          child: MyTitle(
-                            title: "The Shop",
-                            children: <Widget>[
-                              MyResource(title: "Quanta", resource: "$_quanta"),
-                              SizedBox(height: 10),
-                              for (
-                                int index = 0;
-                                index < _items.length;
-                                index++
-                              )
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: ElevatedButton(
-                                    onPressed:
-                                        _items[index].count >=
-                                                _items[index].stackLimit ||
-                                            _quanta < _items[index].cost
-                                        ? null
-                                        : () {
-                                            _items[index].count++;
-                                            _quanta -= _items[index].cost;
-                                            setState(() {});
-                                          },
-                                    style: ElevatedButton.styleFrom(
-                                      fixedSize: Size(250, 30),
-                                    ),
-                                    child: Text(
-                                      _items[index].count >=
-                                              _items[index].stackLimit
-                                          ? "${_items[index].name} - ${_items[index].count} Owned"
-                                          : "Buy ${_items[index].name} [${_items[index].count}]: ${_items[index].cost}",
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        MyContainer(
-                          child: MyTitle(
-                            title: "The Market",
-                            children: [
-                              ElevatedButton(
-                                onPressed: _h2o > 0
-                                    ? () {
-                                        _h2o--;
-                                        _quanta += _resourcePrices[0];
-                                        setState(() {});
-                                      }
-                                    : null,
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: Size(200, 30),
-                                ),
-                                child: MyResource(
-                                  title: "${_resourceNames[0]} ($_h2o)",
-                                  resource: "${_resourcePrices[0]}q",
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: _h2 > 0
-                                    ? () {
-                                        _h2--;
-                                        _quanta += _resourcePrices[1];
-                                        setState(() {});
-                                      }
-                                    : null,
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: Size(200, 30),
-                                ),
-                                child: MyResource(
-                                  title: "${_resourceNames[1]} ($_h2)",
-                                  resource: "${_resourcePrices[1]}q",
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              ElevatedButton(
-                                onPressed: _o2 > 0
-                                    ? () {
-                                        _o2--;
-                                        _quanta += _resourcePrices[2];
-                                        setState(() {});
-                                      }
-                                    : null,
-                                style: ElevatedButton.styleFrom(
-                                  fixedSize: Size(200, 30),
-                                ),
-                                child: MyResource(
-                                  title: "${_resourceNames[2]} ($_o2)",
-                                  resource: "${_resourcePrices[2]}q",
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        //items and resources
-                        MyContainer(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              MyTitle(title: "Items", children: itemList),
-                            ],
-                          ),
-                        ),
-                        MyContainer(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              MyTitle(
-                                title: "Resources",
-                                children: [
-                                  MyResource(title: "water", resource: "$_h2o"),
-                                  MyResource(title: "h2", resource: "$_h2"),
-                                  MyResource(title: "o2", resource: "$_o2"),
-                                  SizedBox(height: 10),
-                                  _items[0].count > 0
-                                      ? ElevatedButton(
-                                          onPressed: gatherWater,
-                                          style: ElevatedButton.styleFrom(
-                                            fixedSize: Size(200, 30),
-                                          ),
-                                          child: Text("Gather Water"),
-                                        )
-                                      : SizedBox(),
-                                  SizedBox(height: 10),
-                                  _items[1].count > 0
-                                      ? ElevatedButton(
-                                          onPressed: _h2o >= 2
-                                              ? electrolyzeWater
-                                              : null,
-                                          style: ElevatedButton.styleFrom(
-                                            fixedSize: Size(200, 30),
-                                          ),
-                                          child: Text("Electrolyze Water"),
-                                        )
-                                      : SizedBox(),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Center(
-                    child: MyContainer(
-                      // messages
-                      child: MyTitle(
-                        title: "Messages",
-                        children: [
-                          SizedBox(width: 200, child: Text(_latestMessage)),
-                          SizedBox(height: 10),
-                          _latestMessage == ""
-                              ? SizedBox(width: 0)
-                              : ElevatedButton(
-                                  onPressed: null,
-                                  child: Text("Fill His Tank with 20 O2"),
-                                ),
-                          SizedBox(height: 10),
-                          _latestMessage == ""
-                              ? SizedBox(width: 0)
-                              : ElevatedButton(
-                                  onPressed: null,
-                                  child: Text("Watch Him Suffer"),
-                                ),
-                        ],
+                  Row(
+                    children: [
+                      SizedBox(width: 100),
+                      SizedBox(width: 100, child: Text("Email:")),
+                      SizedBox(
+                        width: 200,
+                        child: TextField(controller: _emailController),
                       ),
-                    ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(width: 100),
+                      SizedBox(width: 100, child: Text("Password:")),
+                      SizedBox(
+                        width: 200,
+                        child: TextField(controller: _passwordController),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await FirebaseAuth.instance.signInWithEmailAndPassword(
+                          email: _emailController.text,
+                          password: _passwordController.text,
+                        );
+                      } catch (e) {
+                        print(e);
+                      }
+                    },
+                    child: Text("Sign In"),
+                  ),
+                  SizedBox(height: 20),
+                  Text("  - OR -"),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await FirebaseAuth.instance
+                            .createUserWithEmailAndPassword(
+                              email: _emailController.text,
+                              password: _passwordController.text,
+                            );
+                      } catch (e) {
+                        print(e);
+                      }
+                    },
+                    child: Text("Sign Up"),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            SizedBox(width: 100),
+          );
+        }
+        String _user = snapshot.data!.email ?? "?";
+        return DefaultTabController(
+          length: 3,
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+              title: Text(widget.title),
+            ),
+            drawer: Drawer(
+              child: ListView(
+                // Important: Remove any padding from the ListView.
+                padding: EdgeInsets.zero,
+                children: [
+                  DrawerHeader(
+                    decoration: BoxDecoration(color: Colors.green),
+                    child: Column(
+                      children: [Text('The Chemistry Set'), Text(_user)],
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.save_as),
+                    title: Theme(
+                      data: Theme.of(context).copyWith(
+                        splashColor: Colors.green,
+                        highlightColor: Colors.green,
+                        hoverColor: Colors.green,
+                        canvasColor: Colors.green[100],
+                        focusColor: Colors.white,
+                      ),
+                      child: DropdownButton<String>(
+                        value: dropdownValue,
+                        icon: const Icon(Icons.arrow_downward),
+                        elevation: 16,
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 0, 82, 3),
+                        ),
+                        underline: Container(height: 2, color: Colors.green),
+                        onChanged: (String? value) {
+                          // This is called when the user selects an item.
+                          setState(() {
+                            dropdownValue = value!;
+                          });
+                        },
+                        items: dropdownList.map<DropdownMenuItem<String>>((
+                          String value,
+                        ) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    tileColor: Colors.white,
+                    onTap: null,
+                  ),
+                  ListTile(
+                    title: const Text('Reset Progress'),
+                    tileColor: Colors.red,
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Are You Sure?'),
+                            content: const Text(
+                              'This will reset your progress. Are You Sure?',
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {
+                                  _h2o = 0;
+                                  _o2 = 0;
+                                  _h2 = 0;
+                                  _quanta = 1;
+                                  for (int i = 0; i < _items.length; i++) {
+                                    _items[i].count = 0;
+                                  }
+                                  setState(() {});
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Close the dialog
+                                },
+                                child: const Text('OK'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Close the dialog
+                                },
+                                child: const Text('NO'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('Cheat Resources'),
+                    tileColor: Colors.orange,
+                    onTap: () {
+                      _h2o += 100;
+                      _o2 += 100;
+                      _h2 += 100;
+                      _quanta += 1000;
+                      setState(() {});
+                    },
+                  ),
+                  ListTile(
+                    title: const Text('Cheat Progress'),
+                    tileColor: Colors.orange,
+                    onTap: () {
+                      _h2o += 1000;
+                      _o2 += 1000;
+                      _h2 += 1000;
+                      _quanta = 1000;
+                      for (int i = 0; i < _items.length; i++) {
+                        _items[i].count = 10;
+                      }
+                      setState(() {});
+                    },
+                  ),
+                  ListTile(
+                    title: const Text("Sign Out"),
+                    onTap: () async {
+                      await FirebaseAuth.instance.signOut();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            body: Column(
+              children: [
+                TabBar(
+                  controller: _tabController,
+                  labelColor: Colors.green,
+                  unselectedLabelColor: Colors.blue[300],
+                  indicatorColor: Colors.green[900],
+                  tabs: [
+                    Tab(icon: Icon(Icons.shop)),
+                    Tab(icon: Icon(Icons.inventory)),
+                    Tab(icon: Icon(Icons.message)),
+                  ],
+                ),
+                _items[2].count > 0
+                    ? Container(
+                        color: Colors.yellow,
+                        child: Row(
+                          children: [
+                            MyResource(
+                              title: "Energy",
+                              resource: "$_energy / ${_getMaxEnergy()}",
+                            ),
+                          ],
+                        ),
+                      )
+                    : SizedBox(),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            //the shop and the market
+                            MyContainer(
+                              // the shop
+                              child: MyTitle(
+                                title: "The Shop",
+                                children: <Widget>[
+                                  MyResource(
+                                    title: "Quanta",
+                                    resource: "$_quanta",
+                                  ),
+                                  SizedBox(height: 10),
+                                  for (
+                                    int index = 0;
+                                    index < _items.length;
+                                    index++
+                                  )
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: ElevatedButton(
+                                        onPressed:
+                                            _items[index].count >=
+                                                    _items[index].stackLimit ||
+                                                _quanta < _items[index].cost
+                                            ? null
+                                            : () {
+                                                _items[index].count++;
+                                                _quanta -= _items[index].cost;
+                                                setState(() {});
+                                              },
+                                        style: ElevatedButton.styleFrom(
+                                          fixedSize: Size(250, 30),
+                                        ),
+                                        child: Text(
+                                          _items[index].count >=
+                                                  _items[index].stackLimit
+                                              ? "${_items[index].name} - ${_items[index].count} Owned"
+                                              : "Buy ${_items[index].name} [${_items[index].count}]: ${_items[index].cost}",
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            MyContainer(
+                              child: MyTitle(
+                                title: "The Market",
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: _h2o > 0
+                                        ? () {
+                                            _h2o--;
+                                            _quanta += _resourcePrices[0];
+                                            setState(() {});
+                                          }
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      fixedSize: Size(200, 30),
+                                    ),
+                                    child: MyResource(
+                                      title: "${_resourceNames[0]} ($_h2o)",
+                                      resource: "${_resourcePrices[0]}q",
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  ElevatedButton(
+                                    onPressed: _h2 > 0
+                                        ? () {
+                                            _h2--;
+                                            _quanta += _resourcePrices[1];
+                                            setState(() {});
+                                          }
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      fixedSize: Size(200, 30),
+                                    ),
+                                    child: MyResource(
+                                      title: "${_resourceNames[1]} ($_h2)",
+                                      resource: "${_resourcePrices[1]}q",
+                                    ),
+                                  ),
+                                  SizedBox(height: 10),
+                                  ElevatedButton(
+                                    onPressed: _o2 > 0
+                                        ? () {
+                                            _o2--;
+                                            _quanta += _resourcePrices[2];
+                                            setState(() {});
+                                          }
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      fixedSize: Size(200, 30),
+                                    ),
+                                    child: MyResource(
+                                      title: "${_resourceNames[2]} ($_o2)",
+                                      resource: "${_resourcePrices[2]}q",
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            //items and resources
+                            MyContainer(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  MyTitle(title: "Items", children: itemList),
+                                ],
+                              ),
+                            ),
+                            MyContainer(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: <Widget>[
+                                  MyTitle(
+                                    title: "Resources",
+                                    children: [
+                                      MyResource(
+                                        title: "water",
+                                        resource: "$_h2o",
+                                      ),
+                                      MyResource(title: "h2", resource: "$_h2"),
+                                      MyResource(title: "o2", resource: "$_o2"),
+                                      SizedBox(height: 10),
+                                      _items[0].count > 0
+                                          ? ElevatedButton(
+                                              onPressed: gatherWater,
+                                              style: ElevatedButton.styleFrom(
+                                                fixedSize: Size(200, 30),
+                                              ),
+                                              child: Text("Gather Water"),
+                                            )
+                                          : SizedBox(),
+                                      SizedBox(height: 10),
+                                      _items[1].count > 0
+                                          ? ElevatedButton(
+                                              onPressed: _h2o >= 2
+                                                  ? electrolyzeWater
+                                                  : null,
+                                              style: ElevatedButton.styleFrom(
+                                                fixedSize: Size(200, 30),
+                                              ),
+                                              child: Text("Electrolyze Water"),
+                                            )
+                                          : SizedBox(),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Center(
+                        child: MyContainer(
+                          // messages
+                          child: MyTitle(
+                            title: "Messages",
+                            children: [
+                              SizedBox(width: 200, child: Text(_latestMessage)),
+                              SizedBox(height: 10),
+                              _latestMessage == ""
+                                  ? SizedBox(width: 0)
+                                  : ElevatedButton(
+                                      onPressed: null,
+                                      child: Text("Fill His Tank with 20 O2"),
+                                    ),
+                              SizedBox(height: 10),
+                              _latestMessage == ""
+                                  ? SizedBox(width: 0)
+                                  : ElevatedButton(
+                                      onPressed: null,
+                                      child: Text("Watch Him Suffer"),
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            floatingActionButton: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(width: 100),
 
-            // FloatingActionButton(
-            //   onPressed: _incrementCounter,
-            //   tooltip: 'Increment',
-            //   child: const Icon(Icons.add),
-            // ),
-          ],
-        ),
-        // This trailing comma makes auto-formatting nicer for build methods.
-      ),
+                // FloatingActionButton(
+                //   onPressed: _incrementCounter,
+                //   tooltip: 'Increment',
+                //   child: const Icon(Icons.add),
+                // ),
+              ],
+            ),
+            // This trailing comma makes auto-formatting nicer for build methods.
+          ),
+        );
+      },
     );
   }
 }

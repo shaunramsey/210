@@ -10,29 +10,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-//go to firebase console and make a new project
-// --- give it an ame
-// --- I didn't enable gemini
-// --- I DID turn on analytics
-
-//connect things up -- get firebase cli
-//https://firebase.google.com/docs/cli#setup_update_cli
-//I used automated: https://firebase.google.com/docs/cli#setup_update_cli
-
-//following these steps https://firebase.google.com/docs/auth/flutter/start
-
-//things you can follow instead: https://firebase.google.com/codelabs/firebase-auth-in-flutter-apps#4
-
-//hosting:
-//flutter build web --release
-//install firebase-tools
-//firebase login
-//firebase init hosting
-// -- connect to fb project
-// -- build/web for the build dir
-// -- Yes single page app
-// -- builds. no to github automation
-
 // firebase build web --release
 // firebase deply --only hosting
 // now you can go visit your website from the hosting URL
@@ -94,12 +71,14 @@ class _MyHomePageState extends State<MyHomePage>
   int _o2 = 0;
   int _quanta = 0;
   int _energy = 0;
+  String _errorMessage = "";
 
   String dropdownValue = "Default";
   List<String> dropdownList = <String>['Default', 'One', 'Two', 'Three'];
 
   void setPrefs() {
     debugPrint("The current save file is: $dropdownValue");
+    
     //note to self - MAKE SURE TO ADD THE OTHER ITEMS INTO SHARD PREFERENCES
     _prefs.setInt('h2o', _h2o);
     _prefs.setInt('o2', _o2);
@@ -183,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage>
           _o2 += rg[2] * _items[i].count;
         }
       } else {
-        debugPrint("0 < $_energy ${positiveDelta.floor()}");
+        // debugPrint("0 < $_energy ${positiveDelta.floor()}");
         _energy = startEnergy + positiveDelta.floor();
       }
 
@@ -277,7 +256,9 @@ class _MyHomePageState extends State<MyHomePage>
                           password: _passwordController.text,
                         );
                       } catch (e) {
-                        print(e);
+                        setState(() {
+                          _errorMessage = "$e";
+                        });
                       }
                     },
                     child: Text("Sign In"),
@@ -294,11 +275,35 @@ class _MyHomePageState extends State<MyHomePage>
                               password: _passwordController.text,
                             );
                       } catch (e) {
-                        print(e);
+                        setState(() {
+                          _errorMessage = "$e";
+                        });
                       }
                     },
                     child: Text("Sign Up"),
                   ),
+                  SizedBox(height: 20),
+                  _errorMessage == ""
+                      ? SizedBox()
+                      : Container(
+                          padding: const EdgeInsets.all(
+                            16.0,
+                          ), // Add padding around the text
+                          decoration: BoxDecoration(
+                            color: Colors.red, // Set the background color
+                            borderRadius: BorderRadius.circular(
+                              8.0,
+                            ), // Optional: Add rounded corners
+                          ),
+
+                          child: Text(
+                            _errorMessage,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                 ],
               ),
             ),

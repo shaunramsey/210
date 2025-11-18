@@ -14,8 +14,8 @@ ios/Flutter/Generated.xcconfig
 ios/Pods/
 ios/.build/
 web/firebase-config.js
-**/.firebase/
 *.cache
+.firebase
 
 google-services.json 
 GoogleService-Info.plist 

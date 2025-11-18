@@ -1,4 +1,3 @@
-# Standard Flutter ignores
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -15,7 +14,8 @@ ios/Flutter/Generated.xcconfig
 ios/Pods/
 ios/.build/
 web/firebase-config.js
-.firebase
+**/.firebase/
+*.cache
 
 google-services.json 
 GoogleService-Info.plist 

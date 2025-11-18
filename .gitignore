@@ -17,14 +17,7 @@ ios/.build/
 web/firebase-config.js
 .firebase
 
-# Firebase specific ignores
-**/google-services.json 
-**/GoogleService-Info.plist 
-**/firebase_options.dart 
-**/.firebase/ 
+google-services.json 
+GoogleService-Info.plist 
+firebase_options.dart 
 
-# Firebase specific ignores
-**/google-services.json 
-**/GoogleService-Info.plist 
-my_app/lib/firebase_options.dart
-my_app/.firebase/

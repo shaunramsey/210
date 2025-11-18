@@ -17,7 +17,7 @@ ios/.build/
 web/firebase-config.js # If using Firebase web config, consider ignoring
 
 # Firebase specific ignores
-google-services.json # Android Firebase configuration
-GoogleService-Info.plist # iOS Firebase configuration
-firebase_options.dart # Generated Firebase configuration file (if using FlutterFire CLI)
-.firebase/ # Firebase Hosting cache folder
+**/google-services.json # Android Firebase configuration
+**/GoogleService-Info.plist # iOS Firebase configuration
+**/firebase_options.dart # Generated Firebase configuration file (if using FlutterFire CLI)
+**/.firebase/ # Firebase Hosting cache folder

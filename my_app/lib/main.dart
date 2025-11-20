@@ -9,10 +9,18 @@ import 'item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+FirebaseFirestore db = FirebaseFirestore.instance;
 
 // firebase build web --release
 // firebase deply --only hosting
 // now you can go visit your website from the hosting URL
+
+//goto firebase console for your project
+//goto build - firebase database (firestore) --- not realtime database
+//choose to build, any server, "test mode" - which gives accesss until a certain date -- you'll have to update your security rules or move the date if you continue to use the app
+//flutter pub add cloud_firestore in console then flutter run
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   void setPrefs() {
     debugPrint("The current save file is: $dropdownValue");
-    
+
     //note to self - MAKE SURE TO ADD THE OTHER ITEMS INTO SHARD PREFERENCES
     _prefs.setInt('h2o', _h2o);
     _prefs.setInt('o2', _o2);
@@ -309,7 +317,8 @@ class _MyHomePageState extends State<MyHomePage>
             ),
           );
         }
-        String _user = snapshot.data!.email ?? "?";
+        String userEmail = snapshot.data!.email ?? "?";
+        //String userID = snapshot.data!.
         return DefaultTabController(
           length: 3,
           child: Scaffold(
@@ -325,7 +334,11 @@ class _MyHomePageState extends State<MyHomePage>
                   DrawerHeader(
                     decoration: BoxDecoration(color: Colors.green),
                     child: Column(
-                      children: [Text('The Chemistry Set'), Text(_user)],
+                      children: [
+                        Text('The Chemistry Set'),
+                        Text(userEmail),
+                        Text(FirebaseAuth.instance.currentUser?.uid ?? 'N/A'),
+                      ],
                     ),
                   ),
                   ListTile(

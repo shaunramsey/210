@@ -27,4 +27,5 @@ class Item {
     }
     return resourcesGenerated;
   }
+
 }

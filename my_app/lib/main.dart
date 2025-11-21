@@ -64,6 +64,11 @@ class _MyHomePageState extends State<MyHomePage>
     Item("Battery", 0, 10, 50, -1, 1000000),
     Item("Sensors", 0.1, 0, 50, -1, 1),
   ];
+  int _h2o = 0;
+  int _h2 = 0;
+  int _o2 = 0;
+  int _quanta = 0;
+  int _energy = 0;
 
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
@@ -71,31 +76,84 @@ class _MyHomePageState extends State<MyHomePage>
   final List<String> _resourceNames = ["Water", "H2", "O2", "TBD"];
   final Random _rng = Random();
   //Timer? _timer;
-  late SharedPreferences _prefs;
+  //late SharedPreferences _prefs;
   late TabController _tabController;
   String _latestMessage = "";
-  int _h2o = 0;
-  int _h2 = 0;
-  int _o2 = 0;
-  int _quanta = 0;
-  int _energy = 0;
   String _errorMessage = "";
 
   String dropdownValue = "Default";
   List<String> dropdownList = <String>['Default', 'One', 'Two', 'Three'];
+  bool _saveWasLoaded = false;
 
-  void setPrefs() {
-    debugPrint("The current save file is: $dropdownValue");
+  void loadSave() async {
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? 'NA';
+    debugPrint("Loading save file for  users/$uid/saves/$dropdownValue");
+    if (uid == 'NA') return; // don't save if nobody is there to save
+
+    String path = "users/$uid/saves/$dropdownValue";
+    DocumentSnapshot documentSnapshot = await db.doc(path).get();
+    if (documentSnapshot.exists) {
+      Map<String, dynamic>? data =
+          documentSnapshot.data() as Map<String, dynamic>?;
+      print('Document data: ${documentSnapshot.data()}');
+      if (data == null) return;
+      _h2o = data['h2o'] ?? 0;
+      _o2 = data['o2'] ?? 0;
+      _h2 = data['h2'] ?? 0;
+      _quanta = data['quanta'] ?? 1;
+      _energy = data['energy'] ?? 0;
+      for (int i = 0; i < _items.length; i++) {
+        _items[i].count = data['item$i'] ?? 0;
+      }
+      _saveWasLoaded = true;
+    } else {
+      Map<String, dynamic> defaultSave = {
+        "quanta": 1,
+      }; // everything else is empty and will be 0
+      db.doc(path).set(defaultSave);
+      for (int i = 0; i < _items.length; i++) {
+        _items[i].count = 0;
+      }
+      _h2o = 0;
+      _h2 = 0;
+      _o2 = 0;
+      _quanta = 1;
+      _energy = 0;
+      _saveWasLoaded = true;
+      print('Document does not exist - setting up default values');
+    }
+  }
+
+  void setPrefs() async {
+    //let's not save if we haven't loaded from save before
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? 'NA';
+    debugPrint("Storing save file for  users/$uid/saves/$dropdownValue");
+
+    if (!_saveWasLoaded) return;
+    if (uid == 'NA') return; // don't save if nobody is there to save
+
+    String path = "users/$uid/saves/$dropdownValue";
+    Map<String, dynamic> save = {};
+    save['h2o'] = _h2o;
+    save['o2'] = _o2;
+    save['h2'] = _h2;
+    save['energy'] = _energy;
+    save['quanta'] = _quanta;
+    for (int i = 0; i < _items.length; i++) {
+      save['item$i'] = _items[i].count;
+    }
+    debugPrint("Executing the save");
+    db.doc(path).set(save);
 
     //note to self - MAKE SURE TO ADD THE OTHER ITEMS INTO SHARD PREFERENCES
-    _prefs.setInt('h2o', _h2o);
-    _prefs.setInt('o2', _o2);
-    _prefs.setInt('h2', _h2);
-    _prefs.setInt('energy', _energy);
-    _prefs.setInt('quanta', _quanta);
-    for (int i = 0; i < _items.length; i++) {
-      _prefs.setInt('items$i', _items[i].count);
-    }
+    // _prefs.setInt('h2o', _h2o);
+    // _prefs.setInt('o2', _o2);
+    // _prefs.setInt('h2', _h2);
+    // _prefs.setInt('energy', _energy);
+    // _prefs.setInt('quanta', _quanta);
+    // for (int i = 0; i < _items.length; i++) {
+    //   _prefs.setInt('items$i', _items[i].count);
+    // }
   }
 
   void gatherWater() async {
@@ -179,30 +237,30 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _saveTimer() {
-    Timer.periodic(Duration(seconds: 5), (timer) {
+    Timer.periodic(Duration(seconds: 60), (timer) async {
       setPrefs();
     });
   }
 
-  Future<void> _initSharedPreferences() async {
-    _prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _h2o = _prefs.getInt('h2o') ?? 0;
-      _o2 = _prefs.getInt('o2') ?? 0;
-      _h2 = _prefs.getInt('h2') ?? 0;
-      _quanta = _prefs.getInt('quanta') ?? 1;
-      _energy = _prefs.getInt('energy') ?? 0;
-      for (int i = 0; i < _items.length; i++) {
-        _items[i].count = _prefs.getInt('items$i') ?? 0;
-      }
-    });
+  Future<void> _initSaving() async {
+    // _prefs = await SharedPreferences.getInstance();
+    // setState(() {
+    //   _h2o = _prefs.getInt('h2o') ?? 0;
+    //   _o2 = _prefs.getInt('o2') ?? 0;
+    //   _h2 = _prefs.getInt('h2') ?? 0;
+    //   _quanta = _prefs.getInt('quanta') ?? 1;
+    //   _energy = _prefs.getInt('energy') ?? 0;
+    //   for (int i = 0; i < _items.length; i++) {
+    //     _items[i].count = _prefs.getInt('items$i') ?? 0;
+    //   }
+    // });
   }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _initSharedPreferences();
+    _initSaving();
     _marketTimer();
     _energyTimer();
     _saveTimer();
@@ -259,10 +317,14 @@ class _MyHomePageState extends State<MyHomePage>
                   ElevatedButton(
                     onPressed: () async {
                       try {
+                        setState(() {
+                          _errorMessage = "$e";
+                        });
                         await FirebaseAuth.instance.signInWithEmailAndPassword(
                           email: _emailController.text,
                           password: _passwordController.text,
                         );
+                        loadSave();
                       } catch (e) {
                         setState(() {
                           _errorMessage = "$e";
@@ -277,11 +339,15 @@ class _MyHomePageState extends State<MyHomePage>
                   ElevatedButton(
                     onPressed: () async {
                       try {
+                        setState(() {
+                          _errorMessage = "$e";
+                        });
                         await FirebaseAuth.instance
                             .createUserWithEmailAndPassword(
                               email: _emailController.text,
                               password: _passwordController.text,
                             );
+                        loadSave();
                       } catch (e) {
                         setState(() {
                           _errorMessage = "$e";
@@ -318,6 +384,11 @@ class _MyHomePageState extends State<MyHomePage>
           );
         }
         String userEmail = snapshot.data!.email ?? "?";
+        if (!_saveWasLoaded) {
+          _saveWasLoaded = true;
+          debugPrint("got here");
+          loadSave();
+        }
         //String userID = snapshot.data!.
         return DefaultTabController(
           length: 3,
@@ -360,8 +431,10 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                         underline: Container(height: 2, color: Colors.green),
                         onChanged: (String? value) {
-                          // This is called when the user selects an item.
+                          Navigator.pop(context); // pop off the drawer
                           setState(() {
+                            //this will force a loadsave
+                            _saveWasLoaded = false;
                             dropdownValue = value!;
                           });
                         },

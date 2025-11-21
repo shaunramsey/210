@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
-import 'package:shared_preferences/shared_preferences.dart';
+//import 'package:shared_preferences/shared_preferences.dart';
 import 'my_container.dart';
 import 'my_title.dart';
 import 'my_resource.dart';
@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage>
   int _h2o = 0;
   int _h2 = 0;
   int _o2 = 0;
-  int _quanta = 0;
+  int _quanta = 1;
   int _energy = 0;
 
   TextEditingController _emailController = TextEditingController();
@@ -408,7 +408,10 @@ class _MyHomePageState extends State<MyHomePage>
                       children: [
                         Text('The Chemistry Set'),
                         Text(userEmail),
-                        Text(FirebaseAuth.instance.currentUser?.uid ?? 'N/A'),
+                        Text(
+                          "uid: ${FirebaseAuth.instance.currentUser?.uid ?? 'N/A'}",
+                          style: TextStyle(fontSize: 10),
+                        ),
                       ],
                     ),
                   ),

@@ -6,6 +6,8 @@ import 'my_container.dart';
 import 'my_title.dart';
 import 'my_resource.dart';
 import 'item.dart';
+import 'sensor_display.dart'; //SensorDisplay
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -21,6 +23,8 @@ FirebaseFirestore db = FirebaseFirestore.instance;
 //goto build - firebase database (firestore) --- not realtime database
 //choose to build, any server, "test mode" - which gives accesss until a certain date -- you'll have to update your security rules or move the date if you continue to use the app
 //flutter pub add cloud_firestore in console then flutter run
+
+enum Resource { WATER, HYDROGEN, OXYGEN, NITROGEN, ARGON }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -62,18 +66,25 @@ class _MyHomePageState extends State<MyHomePage>
     Item("Solar Panel", 1, 1, 100, -1, 1000000),
     Item("Pump", -0.9, 0, 100, 0, 1000000),
     Item("Battery", 0, 10, 50, -1, 1000000),
-    Item("Sensors", 0.1, 0, 50, -1, 1),
+    Item("Sensor", -0.1, 0, 50, -1, 1),
+    Item("Atmo. Collector", -3.4, 0, 200, 2, 1),
   ];
-  int _h2o = 0;
-  int _h2 = 0;
-  int _o2 = 0;
+  //h2o, h2, o2, n2, ar
+  final List<int> _resources = [0, 0, 0, 0, 0];
+
   int _quanta = 1;
   int _energy = 0;
 
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  final List<int> _resourcePrices = [0, 0, 0, 0];
-  final List<String> _resourceNames = ["Water", "H2", "O2", "TBD"];
+  final List<int> _resourcePrices = [0, 0, 0, 0, 0];
+  final List<String> _resourceNames = [
+    "Water",
+    "Hydrogen",
+    "Oxygen",
+    "Nitrogen",
+    "Argon",
+  ];
   final Random _rng = Random();
   //Timer? _timer;
   //late SharedPreferences _prefs;
@@ -95,11 +106,13 @@ class _MyHomePageState extends State<MyHomePage>
     if (documentSnapshot.exists) {
       Map<String, dynamic>? data =
           documentSnapshot.data() as Map<String, dynamic>?;
-      print('Document data: ${documentSnapshot.data()}');
+      debugPrint('Document data: ${documentSnapshot.data()}');
       if (data == null) return;
-      _h2o = data['h2o'] ?? 0;
-      _o2 = data['o2'] ?? 0;
-      _h2 = data['h2'] ?? 0;
+      _resources[Resource.WATER.index] = data['h2o'] ?? 0;
+      _resources[Resource.OXYGEN.index] = data['o2'] ?? 0;
+      _resources[Resource.HYDROGEN.index] = data['h2'] ?? 0;
+      _resources[Resource.NITROGEN.index] = data['n2'] ?? 0;
+      _resources[Resource.ARGON.index] = data['ar'] ?? 0;
       _quanta = data['quanta'] ?? 1;
       _energy = data['energy'] ?? 0;
       for (int i = 0; i < _items.length; i++) {
@@ -114,9 +127,9 @@ class _MyHomePageState extends State<MyHomePage>
       for (int i = 0; i < _items.length; i++) {
         _items[i].count = 0;
       }
-      _h2o = 0;
-      _h2 = 0;
-      _o2 = 0;
+      for (int i = 0; i < _resources.length; i++) {
+        _resources[i] = 0;
+      }
       _quanta = 1;
       _energy = 0;
       _saveWasLoaded = true;
@@ -134,9 +147,11 @@ class _MyHomePageState extends State<MyHomePage>
 
     String path = "users/$uid/saves/$dropdownValue";
     Map<String, dynamic> save = {};
-    save['h2o'] = _h2o;
-    save['o2'] = _o2;
-    save['h2'] = _h2;
+    save['h2o'] = _resources[Resource.WATER.index];
+    save['o2'] = _resources[Resource.OXYGEN.index];
+    save['h2'] = _resources[Resource.HYDROGEN.index];
+    save['n2'] = _resources[Resource.NITROGEN.index];
+    save['ar'] = _resources[Resource.ARGON.index];
     save['energy'] = _energy;
     save['quanta'] = _quanta;
     for (int i = 0; i < _items.length; i++) {
@@ -158,16 +173,16 @@ class _MyHomePageState extends State<MyHomePage>
 
   void gatherWater() async {
     setState(() {
-      _h2o++;
+      _resources[Resource.WATER.index]++;
     });
   }
 
   void electrolyzeWater() async {
     setState(() {
-      _h2o = _h2o - 2;
-      _h2 = _h2 + 2;
-      _o2++;
-      if (_o2 > 50 && _events[0] == 0) {
+      _resources[Resource.WATER.index] -= 2;
+      _resources[Resource.HYDROGEN.index] += 2;
+      _resources[Resource.OXYGEN.index] += 1;
+      if (_resources[Resource.OXYGEN.index] > 50 && _events[0] == 0) {
         _tabController.animateTo(2);
         _events[0]++;
         _latestMessage =
@@ -223,9 +238,9 @@ class _MyHomePageState extends State<MyHomePage>
         //then we have energy to do stuff
         for (int i = 0; i < _items.length; i++) {
           List<int> rg = _items[i].generateResources();
-          _h2o += rg[0] * _items[i].count;
-          _h2 += rg[1] * _items[i].count;
-          _o2 += rg[2] * _items[i].count;
+          _resources[Resource.WATER.index] += rg[0] * _items[i].count;
+          _resources[Resource.HYDROGEN.index] += rg[1] * _items[i].count;
+          _resources[Resource.OXYGEN.index] += rg[2] * _items[i].count;
         }
       } else {
         // debugPrint("0 < $_energy ${positiveDelta.floor()}");
@@ -277,7 +292,8 @@ class _MyHomePageState extends State<MyHomePage>
     List<Widget> itemList = [];
     for (int i = 0; i < _items.length; i++) {
       if (_items[i].count > 0) {
-        itemList.add(Text(_items[i].name));
+        String count = _items[i].count > 1 ? "- ${_items[i].count}" : "";
+        itemList.add(Text("${_items[i].name} $count"));
       }
     }
     return StreamBuilder(
@@ -469,12 +485,12 @@ class _MyHomePageState extends State<MyHomePage>
                             actions: <Widget>[
                               TextButton(
                                 onPressed: () {
-                                  _h2o = 0;
-                                  _o2 = 0;
-                                  _h2 = 0;
                                   _quanta = 1;
                                   for (int i = 0; i < _items.length; i++) {
                                     _items[i].count = 0;
+                                  }
+                                  for (int i = 0; i < _resources.length; i++) {
+                                    _resources[i] = 0;
                                   }
                                   setState(() {});
                                   Navigator.of(
@@ -501,9 +517,9 @@ class _MyHomePageState extends State<MyHomePage>
                     title: const Text('Cheat Resources'),
                     tileColor: Colors.orange,
                     onTap: () {
-                      _h2o += 100;
-                      _o2 += 100;
-                      _h2 += 100;
+                      for (int i = 0; i < _resources.length; i++) {
+                        _resources[i] += 100;
+                      }
                       _quanta += 1000;
                       setState(() {});
                     },
@@ -512,9 +528,9 @@ class _MyHomePageState extends State<MyHomePage>
                     title: const Text('Cheat Progress'),
                     tileColor: Colors.orange,
                     onTap: () {
-                      _h2o += 1000;
-                      _o2 += 1000;
-                      _h2 += 1000;
+                      for (int i = 0; i < _resources.length; i++) {
+                        _resources[i] += 1000;
+                      }
                       _quanta = 1000;
                       for (int i = 0; i < _items.length; i++) {
                         _items[i].count = 10;
@@ -561,11 +577,12 @@ class _MyHomePageState extends State<MyHomePage>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
+                      //1st tab
                       Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            //the shop and the market
+                            //the shop
                             MyContainer(
                               // the shop
                               child: MyTitle(
@@ -590,9 +607,10 @@ class _MyHomePageState extends State<MyHomePage>
                                                 _quanta < _items[index].cost
                                             ? null
                                             : () {
-                                                _items[index].count++;
-                                                _quanta -= _items[index].cost;
-                                                setState(() {});
+                                                setState(() {
+                                                  _items[index].count++;
+                                                  _quanta -= _items[index].cost;
+                                                });
                                               },
                                         style: ElevatedButton.styleFrom(
                                           fixedSize: Size(250, 30),
@@ -608,14 +626,16 @@ class _MyHomePageState extends State<MyHomePage>
                                 ],
                               ),
                             ),
+                            //the market
                             MyContainer(
                               child: MyTitle(
                                 title: "The Market",
                                 children: [
                                   ElevatedButton(
-                                    onPressed: _h2o > 0
+                                    onPressed:
+                                        _resources[Resource.WATER.index] > 0
                                         ? () {
-                                            _h2o--;
+                                            _resources[Resource.WATER.index]--;
                                             _quanta += _resourcePrices[0];
                                             setState(() {});
                                           }
@@ -624,15 +644,19 @@ class _MyHomePageState extends State<MyHomePage>
                                       fixedSize: Size(200, 30),
                                     ),
                                     child: MyResource(
-                                      title: "${_resourceNames[0]} ($_h2o)",
+                                      title:
+                                          "${_resourceNames[0]} (${_resources[Resource.WATER.index]})",
                                       resource: "${_resourcePrices[0]}q",
                                     ),
                                   ),
                                   SizedBox(height: 10),
                                   ElevatedButton(
-                                    onPressed: _h2 > 0
+                                    onPressed:
+                                        _resources[Resource.HYDROGEN.index] > 0
                                         ? () {
-                                            _h2--;
+                                            _resources[Resource
+                                                .HYDROGEN
+                                                .index]--;
                                             _quanta += _resourcePrices[1];
                                             setState(() {});
                                           }
@@ -641,15 +665,17 @@ class _MyHomePageState extends State<MyHomePage>
                                       fixedSize: Size(200, 30),
                                     ),
                                     child: MyResource(
-                                      title: "${_resourceNames[1]} ($_h2)",
+                                      title:
+                                          "${_resourceNames[1]} (${_resources[Resource.HYDROGEN.index]})",
                                       resource: "${_resourcePrices[1]}q",
                                     ),
                                   ),
                                   SizedBox(height: 10),
                                   ElevatedButton(
-                                    onPressed: _o2 > 0
+                                    onPressed:
+                                        _resources[Resource.OXYGEN.index] > 0
                                         ? () {
-                                            _o2--;
+                                            _resources[Resource.OXYGEN.index]--;
                                             _quanta += _resourcePrices[2];
                                             setState(() {});
                                           }
@@ -658,7 +684,8 @@ class _MyHomePageState extends State<MyHomePage>
                                       fixedSize: Size(200, 30),
                                     ),
                                     child: MyResource(
-                                      title: "${_resourceNames[2]} ($_o2)",
+                                      title:
+                                          "${_resourceNames[2]} (${_resources[Resource.OXYGEN.index]})",
                                       resource: "${_resourcePrices[2]}q",
                                     ),
                                   ),
@@ -668,11 +695,24 @@ class _MyHomePageState extends State<MyHomePage>
                           ],
                         ),
                       ),
+                      //2nd tab - gathering resources
                       Center(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            //items and resources
+                            _items[5].count > 0
+                                ? MyContainer(
+                                    child: SizedBox(
+                                      height: 300,
+                                      child: Column(
+                                        children: [
+                                          SensorDisplay(items: _items),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : SizedBox(),
+                            //items
                             MyContainer(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
@@ -681,6 +721,7 @@ class _MyHomePageState extends State<MyHomePage>
                                 ],
                               ),
                             ),
+                            //resources
                             MyContainer(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
@@ -690,10 +731,23 @@ class _MyHomePageState extends State<MyHomePage>
                                     children: [
                                       MyResource(
                                         title: "water",
-                                        resource: "$_h2o",
+                                        resource:
+                                            "${_resources[Resource.WATER.index]}",
                                       ),
-                                      MyResource(title: "h2", resource: "$_h2"),
-                                      MyResource(title: "o2", resource: "$_o2"),
+                                      _items[1].count > 0
+                                          ? MyResource(
+                                              title: "h2",
+                                              resource:
+                                                  "${_resources[Resource.HYDROGEN.index]}",
+                                            )
+                                          : SizedBox(),
+                                      _items[1].count > 0
+                                          ? MyResource(
+                                              title: "o2",
+                                              resource:
+                                                  "${_resources[Resource.OXYGEN.index]}",
+                                            )
+                                          : SizedBox(),
                                       SizedBox(height: 10),
                                       _items[0].count > 0
                                           ? ElevatedButton(
@@ -707,7 +761,11 @@ class _MyHomePageState extends State<MyHomePage>
                                       SizedBox(height: 10),
                                       _items[1].count > 0
                                           ? ElevatedButton(
-                                              onPressed: _h2o >= 2
+                                              onPressed:
+                                                  _resources[Resource
+                                                          .WATER
+                                                          .index] >=
+                                                      2
                                                   ? electrolyzeWater
                                                   : null,
                                               style: ElevatedButton.styleFrom(
@@ -724,6 +782,7 @@ class _MyHomePageState extends State<MyHomePage>
                           ],
                         ),
                       ),
+                      //3rd tab - messages
                       Center(
                         child: MyContainer(
                           // messages

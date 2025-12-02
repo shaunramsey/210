@@ -246,10 +246,13 @@ class _MyHomePageState extends State<MyHomePage>
   void _marketTimer() {
     //_timer =
     Timer.periodic(Duration(seconds: 3), (timer) {
-      _resourcePrices[0] = _rng.nextInt(2) + 1;
-      _resourcePrices[1] = 1;
-      _resourcePrices[2] = _rng.nextInt(3) + 1;
-      _resourcePrices[3] = 0;
+      _resourcePrices[ResourceName.WATER.index] = _rng.nextInt(2) + 1;
+      _resourcePrices[ResourceName.HYDROGEN.index] = 1;
+      _resourcePrices[ResourceName.OXYGEN.index] = _rng.nextInt(3) + 1;
+      _resourcePrices[ResourceName.NITROGEN.index] = 0;
+      _resourcePrices[ResourceName.ARGON.index] = 0;
+      _resourcePrices[ResourceName.AMMONIA.index] = _rng.nextInt(10) + 11;
+
       for (int i = 0; i < _resourceSeller.length; i++) {
         if (_resourceSeller[i]) {
           int num = (_resources[i] * 0.5).floor();

@@ -24,7 +24,20 @@ FirebaseFirestore db = FirebaseFirestore.instance;
 //choose to build, any server, "test mode" - which gives accesss until a certain date -- you'll have to update your security rules or move the date if you continue to use the app
 //flutter pub add cloud_firestore in console then flutter run
 
-enum Resource { WATER, HYDROGEN, OXYGEN, NITROGEN, ARGON }
+enum ResourceName { WATER, HYDROGEN, OXYGEN, NITROGEN, ARGON, AMMONIA }
+
+enum ItemName {
+  BUCKET,
+  ELECTROLYZER,
+  SOLARPANEL,
+  PUMP,
+  BATTERY,
+  SENSOR,
+  ATMOCOLLECTOR,
+  HALFAUTOSELLER,
+  AUTOELECTRO,
+  HABERKIT,
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,33 +74,36 @@ class _MyHomePageState extends State<MyHomePage>
     with SingleTickerProviderStateMixin {
   final List<int> _events = [0, 0, 0, 0];
   final List<Item> _items = [
-    Item("Bucket", 0, 0, 1, -1, 1),
-    Item("Electrolyzer", 0, 0, 20, -1, 1),
-    Item("Solar Panel", 1, 1, 100, -1, 1000000),
-    Item("Pump", -0.9, 0, 100, 0, 1000000),
-    Item("Battery", 0, 10, 50, -1, 1000000),
-    Item("Sensor", -0.1, 0, 50, -1, 1),
-    Item("Atmo. Collector", -3.4, 0, 200, 2, 1),
+    Item("Bucket", 0, 0, 1, -1, 1, -1, 0), //0
+    Item("Electrolyzer", 0, 0, 20, -1, 1, 0, 1),
+    Item("Solar Panel", 1, 1, 100, -1, 1000000, 1, 1),
+    Item("Pump", -0.9, 0, 100, 0, 1000000, 2, 1),
+    Item("Battery", 0, 10, 50, -1, 1000000, 2, 2),
+    Item("Sensor", -0.1, 0, 50, -1, 1, 2, 1), //5
+    Item("Atmo. Collector", -3.4, 0, 200, 1, 1, 2, 5),
+    Item("Half Auto-Seller", -5.5, 0, 500, -1, 1, 6, 1), //7
+    Item("Auto-Electro", -10.8, 0, 1000, 2, 1, 6, 1), // 8
+    Item("Haber Kit", 0, 0, 10000, 2, 1, ItemName.AUTOELECTRO.index, 1), //8
   ];
   //h2o, h2, o2, n2, ar
-  final List<int> _resources = [0, 0, 0, 0, 0];
+  final List<int> _resources = [0, 0, 0, 0, 0, 0];
 
   int _quanta = 1;
   int _energy = 0;
 
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
-  final List<int> _resourcePrices = [0, 0, 0, 0, 0];
+  final List<int> _resourcePrices = [0, 0, 0, 0, 0, 0];
+  final List<bool> _resourceSeller = [false, false, false, false, false, false];
   final List<String> _resourceNames = [
     "Water",
     "Hydrogen",
     "Oxygen",
     "Nitrogen",
     "Argon",
+    "Ammonia",
   ];
   final Random _rng = Random();
-  //Timer? _timer;
-  //late SharedPreferences _prefs;
   late TabController _tabController;
   String _latestMessage = "";
   String _errorMessage = "";
@@ -96,44 +112,66 @@ class _MyHomePageState extends State<MyHomePage>
   List<String> dropdownList = <String>['Default', 'One', 'Two', 'Three'];
   bool _saveWasLoaded = false;
 
+  void resetProgress() {
+    _quanta = 1;
+    for (int i = 0; i < _items.length; i++) {
+      _items[i].count = 0;
+    }
+    for (int i = 0; i < _resources.length; i++) {
+      _resources[i] = 0;
+    }
+    for (int i = 0; i < _resourceSeller.length; i++) {
+      _resourceSeller[i] = false;
+    }
+  }
+
   void loadSave() async {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? 'NA';
     debugPrint("Loading save file for  users/$uid/saves/$dropdownValue");
     if (uid == 'NA') return; // don't save if nobody is there to save
 
     String path = "users/$uid/saves/$dropdownValue";
-    DocumentSnapshot documentSnapshot = await db.doc(path).get();
-    if (documentSnapshot.exists) {
-      Map<String, dynamic>? data =
-          documentSnapshot.data() as Map<String, dynamic>?;
-      debugPrint('Document data: ${documentSnapshot.data()}');
-      if (data == null) return;
-      _resources[Resource.WATER.index] = data['h2o'] ?? 0;
-      _resources[Resource.OXYGEN.index] = data['o2'] ?? 0;
-      _resources[Resource.HYDROGEN.index] = data['h2'] ?? 0;
-      _resources[Resource.NITROGEN.index] = data['n2'] ?? 0;
-      _resources[Resource.ARGON.index] = data['ar'] ?? 0;
-      _quanta = data['quanta'] ?? 1;
-      _energy = data['energy'] ?? 0;
-      for (int i = 0; i < _items.length; i++) {
-        _items[i].count = data['item$i'] ?? 0;
+    try {
+      DocumentSnapshot documentSnapshot = await db.doc(path).get();
+      if (documentSnapshot.exists) {
+        Map<String, dynamic>? data =
+            documentSnapshot.data() as Map<String, dynamic>?;
+        debugPrint('Document data: ${documentSnapshot.data()}');
+        if (data == null) return;
+        _resources[ResourceName.WATER.index] = data['h2o'] ?? 0;
+        _resources[ResourceName.OXYGEN.index] = data['o2'] ?? 0;
+        _resources[ResourceName.HYDROGEN.index] = data['h2'] ?? 0;
+        _resources[ResourceName.NITROGEN.index] = data['n2'] ?? 0;
+        _resources[ResourceName.ARGON.index] = data['ar'] ?? 0;
+        _resources[ResourceName.AMMONIA.index] = data['nh3'] ?? 0;
+        _quanta = data['quanta'] ?? 1;
+        _energy = data['energy'] ?? 0;
+        for (int i = 0; i < _items.length; i++) {
+          _items[i].count = data['item$i'] ?? 0;
+        }
+        _saveWasLoaded = true;
+      } else {
+        Map<String, dynamic> defaultSave = {
+          "quanta": 1,
+        }; // everything else is empty and will be 0
+        try {
+          await db.doc(path).set(defaultSave);
+        } catch (e) {
+          debugPrint("Setting quanta 1 failed: $e");
+        }
+        for (int i = 0; i < _items.length; i++) {
+          _items[i].count = 0;
+        }
+        for (int i = 0; i < _resources.length; i++) {
+          _resources[i] = 0;
+        }
+        _quanta = 1;
+        _energy = 0;
+        _saveWasLoaded = true;
+        debugPrint('Document does not exist - setting up default values');
       }
-      _saveWasLoaded = true;
-    } else {
-      Map<String, dynamic> defaultSave = {
-        "quanta": 1,
-      }; // everything else is empty and will be 0
-      db.doc(path).set(defaultSave);
-      for (int i = 0; i < _items.length; i++) {
-        _items[i].count = 0;
-      }
-      for (int i = 0; i < _resources.length; i++) {
-        _resources[i] = 0;
-      }
-      _quanta = 1;
-      _energy = 0;
-      _saveWasLoaded = true;
-      print('Document does not exist - setting up default values');
+    } catch (e) {
+      debugPrint("failed during a get $e");
     }
   }
 
@@ -147,19 +185,25 @@ class _MyHomePageState extends State<MyHomePage>
 
     String path = "users/$uid/saves/$dropdownValue";
     Map<String, dynamic> save = {};
-    save['h2o'] = _resources[Resource.WATER.index];
-    save['o2'] = _resources[Resource.OXYGEN.index];
-    save['h2'] = _resources[Resource.HYDROGEN.index];
-    save['n2'] = _resources[Resource.NITROGEN.index];
-    save['ar'] = _resources[Resource.ARGON.index];
+    save['h2o'] = _resources[ResourceName.WATER.index];
+    save['o2'] = _resources[ResourceName.OXYGEN.index];
+    save['h2'] = _resources[ResourceName.HYDROGEN.index];
+    save['n2'] = _resources[ResourceName.NITROGEN.index];
+    save['ar'] = _resources[ResourceName.ARGON.index];
+    save['nh3'] = _resources[ResourceName.AMMONIA.index];
     save['energy'] = _energy;
     save['quanta'] = _quanta;
     for (int i = 0; i < _items.length; i++) {
       save['item$i'] = _items[i].count;
     }
     debugPrint("Executing the save");
-    db.doc(path).set(save);
-
+    try {
+      debugPrint("Before the set $path $save");
+      await db.doc(path).set(save);
+      debugPrint("After the set $path $save");
+    } catch (e) {
+      debugPrint("$e");
+    }
     //note to self - MAKE SURE TO ADD THE OTHER ITEMS INTO SHARD PREFERENCES
     // _prefs.setInt('h2o', _h2o);
     // _prefs.setInt('o2', _o2);
@@ -173,16 +217,24 @@ class _MyHomePageState extends State<MyHomePage>
 
   void gatherWater() async {
     setState(() {
-      _resources[Resource.WATER.index]++;
+      _resources[ResourceName.WATER.index]++;
+    });
+  }
+
+  void haberProcess() async {
+    setState(() {
+      _resources[ResourceName.HYDROGEN.index] -= 6;
+      _resources[ResourceName.NITROGEN.index] -= 2;
+      _resources[ResourceName.AMMONIA.index] += 2;
     });
   }
 
   void electrolyzeWater() async {
     setState(() {
-      _resources[Resource.WATER.index] -= 2;
-      _resources[Resource.HYDROGEN.index] += 2;
-      _resources[Resource.OXYGEN.index] += 1;
-      if (_resources[Resource.OXYGEN.index] > 50 && _events[0] == 0) {
+      _resources[ResourceName.WATER.index] -= 2;
+      _resources[ResourceName.HYDROGEN.index] += 2;
+      _resources[ResourceName.OXYGEN.index] += 1;
+      if (_resources[ResourceName.OXYGEN.index] > 50 && _events[0] == 0) {
         _tabController.animateTo(2);
         _events[0]++;
         _latestMessage =
@@ -198,6 +250,21 @@ class _MyHomePageState extends State<MyHomePage>
       _resourcePrices[1] = 1;
       _resourcePrices[2] = _rng.nextInt(3) + 1;
       _resourcePrices[3] = 0;
+      for (int i = 0; i < _resourceSeller.length; i++) {
+        if (_resourceSeller[i]) {
+          int num = (_resources[i] * 0.5).floor();
+          _resources[i] -= num;
+          _quanta += num * _resourcePrices[i];
+        }
+      }
+      if (_items[8].count > 0) {
+        //auto electro
+        int num = (_resources[ResourceName.WATER.index] * 0.25).floor();
+        _resources[ResourceName.WATER.index] -= num * 2;
+        _resources[ResourceName.HYDROGEN.index] += num * 2;
+        _resources[ResourceName.OXYGEN.index] += num;
+      }
+
       setState(() {});
     });
   }
@@ -238,9 +305,14 @@ class _MyHomePageState extends State<MyHomePage>
         //then we have energy to do stuff
         for (int i = 0; i < _items.length; i++) {
           List<int> rg = _items[i].generateResources();
-          _resources[Resource.WATER.index] += rg[0] * _items[i].count;
-          _resources[Resource.HYDROGEN.index] += rg[1] * _items[i].count;
-          _resources[Resource.OXYGEN.index] += rg[2] * _items[i].count;
+          // debugPrint('$i ${_items[i].name} ${_items[i].count} $rg');
+          // debugPrint(
+          //   '${_resources[0]} ${_items[i].count} ${rg[0] * _items[i].count}',
+          // );
+          for (int j = 0; j < _resources.length; j++) {
+            _resources[j] += rg[j] * _items[i].count;
+          }
+          // debugPrint('${_resources[0]}');
         }
       } else {
         // debugPrint("0 < $_energy ${positiveDelta.floor()}");
@@ -402,7 +474,6 @@ class _MyHomePageState extends State<MyHomePage>
         String userEmail = snapshot.data!.email ?? "?";
         if (!_saveWasLoaded) {
           _saveWasLoaded = true;
-          debugPrint("got here");
           loadSave();
         }
         //String userID = snapshot.data!.
@@ -485,13 +556,7 @@ class _MyHomePageState extends State<MyHomePage>
                             actions: <Widget>[
                               TextButton(
                                 onPressed: () {
-                                  _quanta = 1;
-                                  for (int i = 0; i < _items.length; i++) {
-                                    _items[i].count = 0;
-                                  }
-                                  for (int i = 0; i < _resources.length; i++) {
-                                    _resources[i] = 0;
-                                  }
+                                  resetProgress();
                                   setState(() {});
                                   Navigator.of(
                                     context,
@@ -598,31 +663,42 @@ class _MyHomePageState extends State<MyHomePage>
                                     index < _items.length;
                                     index++
                                   )
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: ElevatedButton(
-                                        onPressed:
-                                            _items[index].count >=
-                                                    _items[index].stackLimit ||
-                                                _quanta < _items[index].cost
-                                            ? null
-                                            : () {
-                                                setState(() {
-                                                  _items[index].count++;
-                                                  _quanta -= _items[index].cost;
-                                                });
-                                              },
-                                        style: ElevatedButton.styleFrom(
-                                          fixedSize: Size(250, 30),
-                                        ),
-                                        child: Text(
-                                          _items[index].count >=
-                                                  _items[index].stackLimit
-                                              ? "${_items[index].name} - ${_items[index].count} Owned"
-                                              : "Buy ${_items[index].name} [${_items[index].count}]: ${_items[index].cost}",
-                                        ),
-                                      ),
-                                    ),
+                                    (_items[index].dependency < 0 ||
+                                                _items[_items[index].dependency]
+                                                        .count >=
+                                                    _items[index]
+                                                        .dependencyAmount) &&
+                                            (_items[index].count <
+                                                _items[index].stackLimit)
+                                        ? Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: ElevatedButton(
+                                              onPressed:
+                                                  _items[index].count >=
+                                                          _items[index]
+                                                              .stackLimit ||
+                                                      _quanta <
+                                                          _items[index].cost
+                                                  ? null
+                                                  : () {
+                                                      setState(() {
+                                                        _items[index].count++;
+                                                        _quanta -=
+                                                            _items[index].cost;
+                                                      });
+                                                    },
+                                              style: ElevatedButton.styleFrom(
+                                                fixedSize: Size(250, 30),
+                                              ),
+                                              child: Text(
+                                                _items[index].count >=
+                                                        _items[index].stackLimit
+                                                    ? "${_items[index].name} - ${_items[index].count} Owned"
+                                                    : "Buy ${_items[index].name} [${_items[index].count}]: ${_items[index].cost}",
+                                              ),
+                                            ),
+                                          )
+                                        : SizedBox(),
                                 ],
                               ),
                             ),
@@ -631,63 +707,171 @@ class _MyHomePageState extends State<MyHomePage>
                               child: MyTitle(
                                 title: "The Market",
                                 children: [
-                                  ElevatedButton(
-                                    onPressed:
-                                        _resources[Resource.WATER.index] > 0
-                                        ? () {
-                                            _resources[Resource.WATER.index]--;
-                                            _quanta += _resourcePrices[0];
-                                            setState(() {});
-                                          }
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      fixedSize: Size(200, 30),
-                                    ),
-                                    child: MyResource(
-                                      title:
-                                          "${_resourceNames[0]} (${_resources[Resource.WATER.index]})",
-                                      resource: "${_resourcePrices[0]}q",
-                                    ),
+                                  Row(
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed:
+                                            _resources[ResourceName
+                                                    .WATER
+                                                    .index] >
+                                                0
+                                            ? () {
+                                                _resources[ResourceName
+                                                    .WATER
+                                                    .index]--;
+                                                _quanta += _resourcePrices[0];
+                                                setState(() {});
+                                              }
+                                            : null,
+                                        style: ElevatedButton.styleFrom(
+                                          fixedSize: Size(200, 30),
+                                        ),
+                                        child: MyResource(
+                                          title:
+                                              "${_resourceNames[0]} (${_resources[ResourceName.WATER.index]})",
+                                          resource: "${_resourcePrices[0]}q",
+                                        ),
+                                      ),
+                                      _items[7].count > 0
+                                          ? Checkbox(
+                                              value: _resourceSeller[0],
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _resourceSeller[0] =
+                                                      value ?? false;
+                                                });
+                                              },
+                                            )
+                                          : SizedBox(),
+                                    ],
                                   ),
                                   SizedBox(height: 10),
-                                  ElevatedButton(
-                                    onPressed:
-                                        _resources[Resource.HYDROGEN.index] > 0
-                                        ? () {
-                                            _resources[Resource
-                                                .HYDROGEN
-                                                .index]--;
-                                            _quanta += _resourcePrices[1];
-                                            setState(() {});
-                                          }
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      fixedSize: Size(200, 30),
-                                    ),
-                                    child: MyResource(
-                                      title:
-                                          "${_resourceNames[1]} (${_resources[Resource.HYDROGEN.index]})",
-                                      resource: "${_resourcePrices[1]}q",
-                                    ),
+                                  Row(
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed:
+                                            _resources[ResourceName
+                                                    .HYDROGEN
+                                                    .index] >
+                                                0
+                                            ? () {
+                                                _resources[ResourceName
+                                                    .HYDROGEN
+                                                    .index]--;
+                                                _quanta += _resourcePrices[1];
+                                                setState(() {});
+                                              }
+                                            : null,
+                                        style: ElevatedButton.styleFrom(
+                                          fixedSize: Size(200, 30),
+                                        ),
+                                        child: MyResource(
+                                          title:
+                                              "${_resourceNames[1]} (${_resources[ResourceName.HYDROGEN.index]})",
+                                          resource: "${_resourcePrices[1]}q",
+                                        ),
+                                      ),
+                                      _items[7].count > 0
+                                          ? Checkbox(
+                                              value: _resourceSeller[1],
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _resourceSeller[1] =
+                                                      value ?? false;
+                                                });
+                                              },
+                                            )
+                                          : SizedBox(),
+                                    ],
                                   ),
                                   SizedBox(height: 10),
-                                  ElevatedButton(
-                                    onPressed:
-                                        _resources[Resource.OXYGEN.index] > 0
-                                        ? () {
-                                            _resources[Resource.OXYGEN.index]--;
-                                            _quanta += _resourcePrices[2];
-                                            setState(() {});
-                                          }
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      fixedSize: Size(200, 30),
-                                    ),
-                                    child: MyResource(
-                                      title:
-                                          "${_resourceNames[2]} (${_resources[Resource.OXYGEN.index]})",
-                                      resource: "${_resourcePrices[2]}q",
-                                    ),
+                                  Row(
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed:
+                                            _resources[ResourceName
+                                                    .OXYGEN
+                                                    .index] >
+                                                0
+                                            ? () {
+                                                _resources[ResourceName
+                                                    .OXYGEN
+                                                    .index]--;
+                                                _quanta += _resourcePrices[2];
+                                                setState(() {});
+                                              }
+                                            : null,
+                                        style: ElevatedButton.styleFrom(
+                                          fixedSize: Size(200, 30),
+                                        ),
+                                        child: MyResource(
+                                          title:
+                                              "${_resourceNames[2]} (${_resources[ResourceName.OXYGEN.index]})",
+                                          resource: "${_resourcePrices[2]}q",
+                                        ),
+                                      ),
+                                      _items[7].count > 0
+                                          ? Checkbox(
+                                              value: _resourceSeller[2],
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _resourceSeller[2] =
+                                                      value ?? false;
+                                                });
+                                              },
+                                            )
+                                          : SizedBox(),
+                                    ],
+                                  ),
+                                  SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      _items[ItemName.HABERKIT.index].count > 0
+                                          ? ElevatedButton(
+                                              onPressed:
+                                                  _resources[ResourceName
+                                                          .AMMONIA
+                                                          .index] >
+                                                      0
+                                                  ? () {
+                                                      _resources[ResourceName
+                                                          .AMMONIA
+                                                          .index]--;
+                                                      _quanta +=
+                                                          _resourcePrices[ResourceName
+                                                              .AMMONIA
+                                                              .index];
+                                                      setState(() {});
+                                                    }
+                                                  : null,
+                                              style: ElevatedButton.styleFrom(
+                                                fixedSize: Size(200, 30),
+                                              ),
+                                              child: MyResource(
+                                                title:
+                                                    "${_resourceNames[ResourceName.AMMONIA.index]} (${_resources[ResourceName.AMMONIA.index]})",
+                                                resource:
+                                                    "${_resourcePrices[ResourceName.AMMONIA.index]}q",
+                                              ),
+                                            )
+                                          : SizedBox(),
+                                      _items[ItemName.HABERKIT.index].count > 0
+                                          ? Checkbox(
+                                              value:
+                                                  _resourceSeller[ResourceName
+                                                      .AMMONIA
+                                                      .index],
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _resourceSeller[ResourceName
+                                                          .AMMONIA
+                                                          .index] =
+                                                      value ?? false;
+                                                });
+                                              },
+                                            )
+                                          : SizedBox(),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -703,7 +887,6 @@ class _MyHomePageState extends State<MyHomePage>
                             _items[5].count > 0
                                 ? MyContainer(
                                     child: SizedBox(
-                                      height: 300,
                                       child: Column(
                                         children: [
                                           SensorDisplay(items: _items),
@@ -732,20 +915,34 @@ class _MyHomePageState extends State<MyHomePage>
                                       MyResource(
                                         title: "water",
                                         resource:
-                                            "${_resources[Resource.WATER.index]}",
+                                            "${_resources[ResourceName.WATER.index]}",
                                       ),
                                       _items[1].count > 0
                                           ? MyResource(
                                               title: "h2",
                                               resource:
-                                                  "${_resources[Resource.HYDROGEN.index]}",
+                                                  "${_resources[ResourceName.HYDROGEN.index]}",
                                             )
                                           : SizedBox(),
                                       _items[1].count > 0
                                           ? MyResource(
                                               title: "o2",
                                               resource:
-                                                  "${_resources[Resource.OXYGEN.index]}",
+                                                  "${_resources[ResourceName.OXYGEN.index]}",
+                                            )
+                                          : SizedBox(),
+                                      _items[6].count > 0
+                                          ? MyResource(
+                                              title: "n2",
+                                              resource:
+                                                  "${_resources[ResourceName.NITROGEN.index]}",
+                                            )
+                                          : SizedBox(),
+                                      _items[ItemName.HABERKIT.index].count > 0
+                                          ? MyResource(
+                                              title: "nh3",
+                                              resource:
+                                                  "${_resources[ResourceName.AMMONIA.index]}",
                                             )
                                           : SizedBox(),
                                       SizedBox(height: 10),
@@ -762,7 +959,7 @@ class _MyHomePageState extends State<MyHomePage>
                                       _items[1].count > 0
                                           ? ElevatedButton(
                                               onPressed:
-                                                  _resources[Resource
+                                                  _resources[ResourceName
                                                           .WATER
                                                           .index] >=
                                                       2
@@ -772,6 +969,26 @@ class _MyHomePageState extends State<MyHomePage>
                                                 fixedSize: Size(200, 30),
                                               ),
                                               child: Text("Electrolyze Water"),
+                                            )
+                                          : SizedBox(),
+                                      SizedBox(height: 10),
+                                      _items[ItemName.HABERKIT.index].count > 0
+                                          ? ElevatedButton(
+                                              onPressed:
+                                                  _resources[ResourceName
+                                                              .NITROGEN
+                                                              .index] >=
+                                                          2 &&
+                                                      _resources[ResourceName
+                                                              .HYDROGEN
+                                                              .index] >=
+                                                          6
+                                                  ? haberProcess
+                                                  : null,
+                                              style: ElevatedButton.styleFrom(
+                                                fixedSize: Size(200, 30),
+                                              ),
+                                              child: Text("Perform Haber"),
                                             )
                                           : SizedBox(),
                                     ],

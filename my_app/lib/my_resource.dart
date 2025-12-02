@@ -11,7 +11,7 @@ class MyResource extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 97,
+            width: 110,
             child: Align(
               alignment: Alignment.centerRight,
               child: Text("$title:"),

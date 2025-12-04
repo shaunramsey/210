@@ -575,7 +575,7 @@ class _MyHomePageState extends State<MyHomePage>
                   ),
                   ListTile(
                     title: const Text('Reset Progress'),
-                    tileColor: Colors.red,
+                    tileColor: Colors.red[300],
                     onTap: () {
                       showDialog(
                         context: context,
@@ -670,6 +670,7 @@ class _MyHomePageState extends State<MyHomePage>
                   ),
                   ListTile(
                     title: const Text("Sign Out"),
+                    tileColor: Colors.grey[300],
                     onTap: () async {
                       await FirebaseAuth.instance.signOut();
                     },

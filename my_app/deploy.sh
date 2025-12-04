@@ -26,3 +26,4 @@ echo "Build/Deploy in '$file_path' updated to version: $new_value"
 
 flutter build web --release
 firebase deploy --only hosting
+echo "-------- Build/Deploy/Hosted Version: $new_value"

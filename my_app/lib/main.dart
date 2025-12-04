@@ -129,6 +129,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   Future<String> _loadVersion() async {
     version = await rootBundle.loadString('assets/version.txt');
+    setState((){});
     return version;
   }
 

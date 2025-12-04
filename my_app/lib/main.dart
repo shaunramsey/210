@@ -135,8 +135,6 @@ class _MyHomePageState extends State<MyHomePage>
       gitlog = await DefaultAssetBundle.of(
         context,
       ).loadString('assets/gitlog.txt', cache: false);
-      
-
     } catch (e) {
       debugPrint("loading assets: $e");
     }
@@ -612,31 +610,37 @@ class _MyHomePageState extends State<MyHomePage>
                       );
                     },
                   ),
-                  ListTile(
-                    title: const Text('Cheat Resources'),
-                    tileColor: Colors.orange,
-                    onTap: () {
-                      for (int i = 0; i < _resources.length; i++) {
-                        _resources[i] += 100;
-                      }
-                      _quanta += 1000;
-                      setState(() {});
-                    },
-                  ),
-                  ListTile(
-                    title: const Text('Cheat Progress'),
-                    tileColor: Colors.orange,
-                    onTap: () {
-                      for (int i = 0; i < _resources.length; i++) {
-                        _resources[i] += 1000;
-                      }
-                      _quanta = 1000;
-                      for (int i = 0; i < _items.length; i++) {
-                        _items[i].count = 10;
-                      }
-                      setState(() {});
-                    },
-                  ),
+                  FirebaseAuth.instance.currentUser?.email ==
+                          "doc@shaunramsey.com"
+                      ? ListTile(
+                          title: const Text('Cheat Resources'),
+                          tileColor: Colors.orange,
+                          onTap: () {
+                            for (int i = 0; i < _resources.length; i++) {
+                              _resources[i] += 100;
+                            }
+                            _quanta += 1000;
+                            setState(() {});
+                          },
+                        )
+                      : SizedBox(),
+                  FirebaseAuth.instance.currentUser?.email ==
+                          "doc@shaunramsey.com"
+                      ? ListTile(
+                          title: const Text('Cheat Progress'),
+                          tileColor: Colors.orange,
+                          onTap: () {
+                            for (int i = 0; i < _resources.length; i++) {
+                              _resources[i] += 1000;
+                            }
+                            _quanta = 1000;
+                            for (int i = 0; i < _items.length; i++) {
+                              _items[i].count = 10;
+                            }
+                            setState(() {});
+                          },
+                        )
+                      : SizedBox(),
                   ListTile(
                     title: Text("Git Log"),
                     tileColor: Colors.green,

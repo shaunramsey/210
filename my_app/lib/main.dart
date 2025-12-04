@@ -109,7 +109,9 @@ class _MyHomePageState extends State<MyHomePage>
   String _latestMessage = "";
   String _errorMessage = "";
   String version = "Loading...";
-
+  String version2 = "L2";
+  String gitlog2 = "GL2";
+  String gitlog = "Loading...";
   String dropdownValue = "Default";
   List<String> dropdownList = <String>['Default', 'One', 'Two', 'Three'];
   bool _saveWasLoaded = false;
@@ -128,8 +130,19 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   Future<String> _loadVersion() async {
-    version = await rootBundle.loadString('assets/version.txt');
-    setState((){});
+    version = await DefaultAssetBundle.of(
+      context,
+    ).loadString('assets/version.txt', cache: false);
+    gitlog = await DefaultAssetBundle.of(
+      context,
+    ).loadString('assets/gitlog.txt', cache: false);
+    version2 = await DefaultAssetBundle.of(
+      context,
+    ).loadString('assets/version2.txt', cache: false);
+    gitlog2 = await DefaultAssetBundle.of(
+      context,
+    ).loadString('assets/gitlog2.txt', cache: false);
+    setState(() {});
     return version;
   }
 
@@ -521,7 +534,7 @@ class _MyHomePageState extends State<MyHomePage>
                           "uid: ${FirebaseAuth.instance.currentUser?.uid ?? 'N/A'}",
                           style: TextStyle(fontSize: 10),
                         ),
-                        Text("version: $version"),
+                        Text("version: $version - $version2"),
                       ],
                     ),
                   ),
@@ -624,6 +637,33 @@ class _MyHomePageState extends State<MyHomePage>
                         _items[i].count = 10;
                       }
                       setState(() {});
+                    },
+                  ),
+                  ListTile(
+                    title: Text("Git Log"),
+                    tileColor: Colors.green,
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Git Log'),
+                            content: SingleChildScrollView(
+                              child: Text("$gitlog\n$gitlog2\nhelp me"),
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(
+                                    context,
+                                  ).pop(); // Close the dialog
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
                   ),
                   ListTile(

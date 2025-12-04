@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -107,6 +108,7 @@ class _MyHomePageState extends State<MyHomePage>
   late TabController _tabController;
   String _latestMessage = "";
   String _errorMessage = "";
+  String version = "Loading...";
 
   String dropdownValue = "Default";
   List<String> dropdownList = <String>['Default', 'One', 'Two', 'Three'];
@@ -125,6 +127,11 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 
+  Future<String> _loadVersion() async {
+    version = await rootBundle.loadString('assets/version.txt');
+    return version;
+  }
+
   void loadSave() async {
     String uid = FirebaseAuth.instance.currentUser?.uid ?? 'NA';
     debugPrint("Loading save file for  users/$uid/saves/$dropdownValue");
@@ -138,12 +145,16 @@ class _MyHomePageState extends State<MyHomePage>
             documentSnapshot.data() as Map<String, dynamic>?;
         debugPrint('Document data: ${documentSnapshot.data()}');
         if (data == null) return;
-        _resources[ResourceName.WATER.index] = data['h2o'] ?? 0;
-        _resources[ResourceName.OXYGEN.index] = data['o2'] ?? 0;
-        _resources[ResourceName.HYDROGEN.index] = data['h2'] ?? 0;
-        _resources[ResourceName.NITROGEN.index] = data['n2'] ?? 0;
-        _resources[ResourceName.ARGON.index] = data['ar'] ?? 0;
-        _resources[ResourceName.AMMONIA.index] = data['nh3'] ?? 0;
+        for (int i = 0; i < _resources.length; i++) {
+          _resources[i] = data['resrc$i'] ?? 0;
+        }
+        // _resources[ResourceName.WATER.index] = data['h2o'] ?? 0;
+        // _resources[ResourceName.OXYGEN.index] = data['o2'] ?? 0;
+        // _resources[ResourceName.HYDROGEN.index] = data['h2'] ?? 0;
+        // _resources[ResourceName.NITROGEN.index] = data['n2'] ?? 0;
+        // _resources[ResourceName.ARGON.index] = data['ar'] ?? 0;
+        // _resources[ResourceName.AMMONIA.index] = data['nh3'] ?? 0;
+
         _quanta = data['quanta'] ?? 1;
         _energy = data['energy'] ?? 0;
         for (int i = 0; i < _items.length; i++) {
@@ -185,14 +196,17 @@ class _MyHomePageState extends State<MyHomePage>
 
     String path = "users/$uid/saves/$dropdownValue";
     Map<String, dynamic> save = {};
-    save['h2o'] = _resources[ResourceName.WATER.index];
-    save['o2'] = _resources[ResourceName.OXYGEN.index];
-    save['h2'] = _resources[ResourceName.HYDROGEN.index];
-    save['n2'] = _resources[ResourceName.NITROGEN.index];
-    save['ar'] = _resources[ResourceName.ARGON.index];
-    save['nh3'] = _resources[ResourceName.AMMONIA.index];
+    // save['h2o'] = _resources[ResourceName.WATER.index];
+    // save['o2'] = _resources[ResourceName.OXYGEN.index];
+    // save['h2'] = _resources[ResourceName.HYDROGEN.index];
+    // save['n2'] = _resources[ResourceName.NITROGEN.index];
+    // save['ar'] = _resources[ResourceName.ARGON.index];
+    // save['nh3'] = _resources[ResourceName.AMMONIA.index];
     save['energy'] = _energy;
     save['quanta'] = _quanta;
+    for (int i = 0; i < _resources.length; i++) {
+      save['resrc$i'] = _resources[i];
+    }
     for (int i = 0; i < _items.length; i++) {
       save['item$i'] = _items[i].count;
     }
@@ -322,6 +336,9 @@ class _MyHomePageState extends State<MyHomePage>
         _energy = startEnergy + positiveDelta.floor();
       }
 
+      if (_energy > _getMaxEnergy()) {
+        _energy = _getMaxEnergy();
+      }
       setState(() {});
     });
   }
@@ -350,6 +367,7 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadVersion();
     _initSaving();
     _marketTimer();
     _energyTimer();
@@ -502,6 +520,7 @@ class _MyHomePageState extends State<MyHomePage>
                           "uid: ${FirebaseAuth.instance.currentUser?.uid ?? 'N/A'}",
                           style: TextStyle(fontSize: 10),
                         ),
+                        Text("version: $version"),
                       ],
                     ),
                   ),

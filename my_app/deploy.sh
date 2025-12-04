@@ -25,7 +25,7 @@ echo "$new_value" > "$file_path"
 echo "Build/Deploy in '$file_path' updated to version: $new_value"
 
 echo "Acquiring git log history"
-git log --pretty=format:"%cn -- %cd%n%h: 5s"> assets/gitlog.txt
+git log --pretty=format:"%cn -- %cd%n%h: %s"> assets/gitlog.txt
 
 flutter build web --release
 firebase deploy --only hosting

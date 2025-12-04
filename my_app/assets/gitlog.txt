@@ -1,185 +1,64 @@
-commit 41885d94be99948a512ea4156d23d208627d2462
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Dec 4 14:58:34 2025 -0500
-
-    updating version control / hosting caching
-
-commit 691f45e3d119c4c8a3b797032f80adfd955df13d
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Dec 4 13:43:13 2025 -0500
-
-    update to version control/display
-
-commit a72744057daf044efaaa1aef3c7555f085a2bba8
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Dec 4 13:40:41 2025 -0500
-
-    added version control and display - now compile and deploy with deploy.sh zsh script
-
-commit 020845448caabb2f658b002909ecffe60994bbac
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Dec 2 12:42:22 2025 -0500
-
-    ammonia can be sold
-
-commit cfd723846a079de2c98dc1e785f1cc2ab74f45bb
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Dec 2 12:36:07 2025 -0500
-
-    haber kit, resource enum, move towards single Resource Class, items have dependencies
-
-commit 45df93711bb7042f7a81939818393db25f784242
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Mon Nov 24 15:02:13 2025 -0500
-
-    dividers, sensors, atmo, _resource
-
-commit 1e2316c85444028a278a34ce0d94e09176c90025
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Nov 20 23:47:33 2025 -0500
-
-    modify defaults to prevent defunc save
-
-commit 3c73fa3ca2f85e86ec6b2b653c347b9eb8426012
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Nov 20 23:40:43 2025 -0500
-
-    load/save to firestore based on uid
-
-commit f941f4fce37694b81e4af7fe8ea532a815f29b82
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Nov 20 13:45:45 2025 -0500
-
-    adding firestore and more information from auth/current user id
-
-commit 9f9f99066cf2b54fcb989660d5e0f980b9b9a6fd
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:43:13 2025 -0500
-
-    removing .firebase tracking
-
-commit 5ca179aa1d6ff188870cbddd456e84b8ec794e13
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:42:12 2025 -0500
-
-    remove cached
-
-commit 5c55726f230ede48e9a49634d590b9504bc0ffb6
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:38:16 2025 -0500
-
-    one more update to the .gitignore
-
-commit 0213ef24316803a083983b7c8d6bab1f769b8a68
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:37:26 2025 -0500
-
-    git ignore - removing #
-
-commit f4bad860bc212edd7c45f4f2aa59f0a0d68e0ed9
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:36:13 2025 -0500
-
-    updating gitignore
-
-commit 04fb0266000274dd10e39da53c65414865e71fd1
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:32:41 2025 -0500
-
-    updating .gitignore
-
-commit 95240584b3014e0875215da083e7719c99c2eaf1
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:32:14 2025 -0500
-
-    updating gitignore
-
-commit 64b3cb074a9f779f04f286823f4b2046d865ba0e
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 12:23:47 2025 -0500
-
-    removing secrets
-
-commit dcb25d35085b81a2cd3923f9c450d2768a2c4a13
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 18 11:46:05 2025 -0500
-
-    authentication and hosting instructions
-
-commit efc47f2e1d66742b1ee0c7f3b127e01a6771f2ac
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Nov 11 21:37:49 2025 -0500
-
-    movement towards modularizing items and moving to a single button render for the items - also move to allowing sizes to be as big as needed in certain places
-
-commit 4dadc70cae8fbc24e6e370802aba630a0fcccec8
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Sun Nov 9 20:51:02 2025 -0500
-
-    modularizing and progressing the game a bit
-
-commit 63215d31c75703a23067d4cfad03791754d2949d
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Oct 28 11:58:11 2025 -0400
-
-    add the pub get
-
-commit b129112ab7cebfe27b208c14cb5fdfd549d2eb9b
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Mon Oct 27 14:03:14 2025 -0400
-
-    shared preferences demo
-
-commit 9fe0e72aa29305bbe6974a57223ad90657fd8a19
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Mon Oct 27 11:55:47 2025 -0400
-
-    forms and images
-
-commit 610f585366e82abdf5eac60db99b34469a735231
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Sep 30 13:57:36 2025 -0400
-
-    flutter create app
-
-commit 861efe81aa065ae47bed2426fbaf7b72e73cb32d
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Sep 23 12:26:04 2025 -0400
-
-    move to intro folder
-
-commit d7cd019f8813018376f92ffa39bfb0614037796b
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Sep 23 11:55:25 2025 -0400
-
-    breaking classes out into their own files
-
-commit 8ee96e79fa7ae3cb6864d40c63c34f927181cdb2
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Sep 18 12:43:02 2025 -0400
-
-    polymorphic tests and overloading
-
-commit c03f826d324aa78a4b4def3d4bf2d3463218361f
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Thu Sep 18 11:34:46 2025 -0400
-
-    removed test.dart
-
-commit 92046bf1ebba9818faf5daa7eb4b676e827d1469
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Sep 16 12:44:55 2025 -0400
-
-    + moved test.dart to t.dart for testing
-
-commit 6f0b212f03232fbf8de52eef4c05bdbd2e0526e0
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Sep 16 12:43:55 2025 -0400
-
-    + initial tutorial commit
-
-commit 4c422cf34fb46a9216558ca2399bb93a633a98fd
-Author: Shaun Ramsey <shaun.ramsey@gmail.com>
-Date:   Tue Sep 16 12:25:52 2025 -0400
-
-    Initial commit
+Shaun Ramsey -- Thu Dec 4 16:34:14 2025 -0500
+c3c56a1: 5s
+Shaun Ramsey -- Thu Dec 4 14:58:34 2025 -0500
+41885d9: 5s
+Shaun Ramsey -- Thu Dec 4 13:43:13 2025 -0500
+691f45e: 5s
+Shaun Ramsey -- Thu Dec 4 13:40:41 2025 -0500
+a727440: 5s
+Shaun Ramsey -- Tue Dec 2 12:42:22 2025 -0500
+0208454: 5s
+Shaun Ramsey -- Tue Dec 2 12:36:07 2025 -0500
+cfd7238: 5s
+Shaun Ramsey -- Mon Nov 24 15:02:13 2025 -0500
+45df937: 5s
+Shaun Ramsey -- Thu Nov 20 23:47:33 2025 -0500
+1e2316c: 5s
+Shaun Ramsey -- Thu Nov 20 23:40:43 2025 -0500
+3c73fa3: 5s
+Shaun Ramsey -- Thu Nov 20 13:45:45 2025 -0500
+f941f4f: 5s
+Shaun Ramsey -- Tue Nov 18 12:43:13 2025 -0500
+9f9f990: 5s
+Shaun Ramsey -- Tue Nov 18 12:42:12 2025 -0500
+5ca179a: 5s
+Shaun Ramsey -- Tue Nov 18 12:38:16 2025 -0500
+5c55726: 5s
+Shaun Ramsey -- Tue Nov 18 12:37:26 2025 -0500
+0213ef2: 5s
+Shaun Ramsey -- Tue Nov 18 12:36:13 2025 -0500
+f4bad86: 5s
+Shaun Ramsey -- Tue Nov 18 12:32:41 2025 -0500
+04fb026: 5s
+Shaun Ramsey -- Tue Nov 18 12:32:14 2025 -0500
+9524058: 5s
+Shaun Ramsey -- Tue Nov 18 12:23:47 2025 -0500
+64b3cb0: 5s
+Shaun Ramsey -- Tue Nov 18 11:46:05 2025 -0500
+dcb25d3: 5s
+Shaun Ramsey -- Tue Nov 11 21:37:49 2025 -0500
+efc47f2: 5s
+Shaun Ramsey -- Sun Nov 9 20:51:02 2025 -0500
+4dadc70: 5s
+Shaun Ramsey -- Tue Oct 28 11:58:11 2025 -0400
+63215d3: 5s
+Shaun Ramsey -- Mon Oct 27 14:03:14 2025 -0400
+b129112: 5s
+Shaun Ramsey -- Mon Oct 27 11:55:47 2025 -0400
+9fe0e72: 5s
+Shaun Ramsey -- Tue Sep 30 13:57:36 2025 -0400
+610f585: 5s
+Shaun Ramsey -- Tue Sep 23 12:26:04 2025 -0400
+861efe8: 5s
+Shaun Ramsey -- Tue Sep 23 11:55:25 2025 -0400
+d7cd019: 5s
+Shaun Ramsey -- Thu Sep 18 12:43:02 2025 -0400
+8ee96e7: 5s
+Shaun Ramsey -- Thu Sep 18 11:34:46 2025 -0400
+c03f826: 5s
+Shaun Ramsey -- Tue Sep 16 12:44:55 2025 -0400
+92046bf: 5s
+Shaun Ramsey -- Tue Sep 16 12:43:55 2025 -0400
+6f0b212: 5s
+GitHub -- Tue Sep 16 12:25:52 2025 -0400
+4c422cf: 5s

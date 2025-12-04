@@ -62,10 +62,7 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-      - assets/version.txt
-      - assets/gitlog.txt
-      - assets/version2.txt
-      - assets/gitlog2.txt
+      - assets/
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

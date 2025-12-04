@@ -109,8 +109,6 @@ class _MyHomePageState extends State<MyHomePage>
   String _latestMessage = "";
   String _errorMessage = "";
   String version = "Loading...";
-  String version2 = "L2";
-  String gitlog2 = "GL2";
   String gitlog = "Loading...";
   String dropdownValue = "Default";
   List<String> dropdownList = <String>['Default', 'One', 'Two', 'Three'];
@@ -130,18 +128,18 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   Future<String> _loadVersion() async {
-    version = await DefaultAssetBundle.of(
-      context,
-    ).loadString('assets/version.txt', cache: false);
-    gitlog = await DefaultAssetBundle.of(
-      context,
-    ).loadString('assets/gitlog.txt', cache: false);
-    version2 = await DefaultAssetBundle.of(
-      context,
-    ).loadString('assets/version2.txt', cache: false);
-    gitlog2 = await DefaultAssetBundle.of(
-      context,
-    ).loadString('assets/gitlog2.txt', cache: false);
+    try {
+      version = await DefaultAssetBundle.of(
+        context,
+      ).loadString('assets/version.txt', cache: false);
+      gitlog = await DefaultAssetBundle.of(
+        context,
+      ).loadString('assets/gitlog.txt', cache: false);
+      
+
+    } catch (e) {
+      debugPrint("loading assets: $e");
+    }
     setState(() {});
     return version;
   }
@@ -534,7 +532,7 @@ class _MyHomePageState extends State<MyHomePage>
                           "uid: ${FirebaseAuth.instance.currentUser?.uid ?? 'N/A'}",
                           style: TextStyle(fontSize: 10),
                         ),
-                        Text("version: $version - $version2"),
+                        Text("version: $version"),
                       ],
                     ),
                   ),
@@ -649,7 +647,7 @@ class _MyHomePageState extends State<MyHomePage>
                           return AlertDialog(
                             title: const Text('Git Log'),
                             content: SingleChildScrollView(
-                              child: Text("$gitlog\n$gitlog2\nhelp me"),
+                              child: Text("$gitlog"),
                             ),
                             actions: <Widget>[
                               TextButton(

@@ -1,3 +1,9 @@
+commit 41885d94be99948a512ea4156d23d208627d2462
+Author: Shaun Ramsey <shaun.ramsey@gmail.com>
+Date:   Thu Dec 4 14:58:34 2025 -0500
+
+    updating version control / hosting caching
+
 commit 691f45e3d119c4c8a3b797032f80adfd955df13d
 Author: Shaun Ramsey <shaun.ramsey@gmail.com>
 Date:   Thu Dec 4 13:43:13 2025 -0500

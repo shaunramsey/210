@@ -18,9 +18,9 @@
       "**/.*",
       "**/node_modules/**"
     ],
-      "headers": [
+    "headers": [
       {
-        "source": "/assets/*.txt",
+        "source": "assets/**/*.txt",
         "headers": [
           {
             "key": "Cache-Control",

@@ -92,8 +92,8 @@ class _MyHomePageState extends State<MyHomePage>
   int _quanta = 1;
   int _energy = 0;
 
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   final List<int> _resourcePrices = [0, 0, 0, 0, 0, 0];
   final List<bool> _resourceSeller = [false, false, false, false, false, false];
   final List<String> _resourceNames = [
@@ -651,7 +651,7 @@ class _MyHomePageState extends State<MyHomePage>
                           return AlertDialog(
                             title: const Text('Git Log'),
                             content: SingleChildScrollView(
-                              child: Text("$gitlog"),
+                              child: Text(gitlog),
                             ),
                             actions: <Widget>[
                               TextButton(

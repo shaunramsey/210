@@ -1,8 +1,15 @@
 import 'dart:io';
 
+// add a function to Grid
+// that takes an integer argument
+// it reports how many of that integer
+// are in the same column (at max)
+// countCol(3) = 2 because the third column has 2 threes
+// and the other columns have only 1 3
+
 class Grid {
   List<List<int>> grid = [];
-  
+
   @override
   String toString() {
     String returnString = "";
@@ -14,9 +21,9 @@ class Grid {
 
   int countThree() {
     int sum = 0;
-    for( List<int> lines in grid ) {
-      for( int number in lines ) {
-        if(number == 3) {
+    for (List<int> lines in grid) {
+      for (int number in lines) {
+        if (number == 3) {
           sum++;
         }
       }

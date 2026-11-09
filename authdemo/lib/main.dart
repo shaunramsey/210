@@ -214,39 +214,51 @@ class _MyHomePageState extends State<MyHomePage> {
                 if (!snapshot.hasData) {
                   return Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(18.0),
-                        child: TextFormField(
-                          controller: _emailController,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            errorText: _errorMessage,
+                      SizedBox(
+                        width: 400,
+                        child: Padding(
+                          padding: const EdgeInsets.all(18.0),
+                          child: TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              errorText: _errorMessage,
+                            ),
                           ),
                         ),
                       ),
 
-                      Padding(
-                        padding: const EdgeInsets.all(18.0),
-                        child: TextFormField(
-                          controller: _passwordController,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            errorText:
-                                _errorMessage, // Display error message if any
-                          ),
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 400,
+                              child: Padding(
+                                padding: const EdgeInsets.all(18.0),
+                                child: TextFormField(
+                                  controller: _passwordController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Password',
+                                    errorText: _errorMessage, // Display error message if any
+                                  ),
 
-                          obscureText: _obscureVision,
+                                  obscureText: _obscureVision,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: _obscureVision
+                                  ? Icon(Icons.visibility)
+                                  : Icon(Icons.visibility_off),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureVision = !_obscureVision;
+                                });
+                              },
+                            ),
+                          ],
                         ),
-                      ),
-                      IconButton(
-                        icon: _obscureVision
-                            ? Icon(Icons.visibility)
-                            : Icon(Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            _obscureVision = !_obscureVision;
-                          });
-                        },
                       ),
 
                       Padding(

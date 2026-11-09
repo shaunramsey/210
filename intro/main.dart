@@ -28,45 +28,20 @@ String
 
 void main() {
   Car myCar = Car();
-  Vehicle racer = Car();
-  print("mycar:");
   myCar.start();
-  print("racer:");
-  racer.start();
-  racer.stop();
-  print("train:");
-  Vehicle sihoo = Train();
-  sihoo.stop();
-  print("michael car");
-  Vehicle michael = Car();
-  print(michael.speed);
-  List<Vehicle> l = [];
-  l.add(michael);
-  l.add(sihoo);
-  l.add(racer);
-  l.add(myCar);
-  sihoo.speed = 30;
-  myCar.speed = 5;
-  racer.speed = 5;
-  Car newCar = myCar;
-  print("newCar speed is ${newCar.speed}");
+  print("${myCar.speed}");
+  myCar.stop();
 
-  //racer + myCar => ?
-  if (myCar == newCar) {
-    print("they are the same");
-  } else {
-    print("They are not the same");
+  List<Vehicle> myList = [Car(), Train(), Train()];
+  print(myList);
+
+  for(int i = 0; i < myList.length; i++) {
+    myList[i].start();
   }
 
-  if (1 == 2) {
-    print("1 isn't 2");
-  } else {
-    print("1 is 2");
-  }
+  //print("${myCar._name}");
+  print("$myCar");
+  myCar.speed = -3;
+  print("$myCar");
 
-  if (6 == 7) {
-    print("This is how we want things");
-  } else {
-    print("okay");
-  }
 }

@@ -278,6 +278,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   );
                 }
+                _passwordController.clear();
+                _emailController.clear();
                 return Center(
                   child: Column(
                     children: [

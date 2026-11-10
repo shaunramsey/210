@@ -1,4 +1,4 @@
-import 'package:clouddemo/count.dart';
+import 'package:clouddemo/stream_fetch.dart';
 import 'package:flutter/material.dart';
 //import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -138,15 +138,9 @@ class _MyAuthWidgetState extends State<MyAuthWidget> {
           }
           _passwordController.clear();
           _emailController.clear();
-          return Center(
-            child: Column(
-              children: [
-                CloudCount(
-                  email: snapshot.data?.email ?? "None",
-                  uid: snapshot.data?.uid ?? "NULL",
-                ),
-              ],
-            ),
+          return CloudStreamCount(
+            email: snapshot.data?.email ?? "None",
+            uid: snapshot.data?.uid ?? "NULL",
           );
         },
       ),

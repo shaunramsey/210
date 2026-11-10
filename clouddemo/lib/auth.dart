@@ -138,7 +138,7 @@ class _MyAuthWidgetState extends State<MyAuthWidget> {
           }
           _passwordController.clear();
           _emailController.clear();
-          return CloudStreamCount(
+          return StreamFetch(
             email: snapshot.data?.email ?? "None",
             uid: snapshot.data?.uid ?? "NULL",
           );

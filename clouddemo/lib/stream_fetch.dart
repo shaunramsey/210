@@ -23,16 +23,16 @@ import 'package:clouddemo/new_project.dart';
 // atomic operations allow you to do things without having to READ and update based on what you read
 // add and set are going to work on dictionaries where set will overwrite
 
-class CloudStreamCount extends StatefulWidget {
-  const CloudStreamCount({super.key, required this.email, required this.uid});
+class StreamFetch extends StatefulWidget {
+  const StreamFetch({super.key, required this.email, required this.uid});
   final String email;
   final String uid;
 
   @override
-  State<CloudStreamCount> createState() => _CloudCountState();
+  State<StreamFetch> createState() => _CloudCountState();
 }
 
-class _CloudCountState extends State<CloudStreamCount> {
+class _CloudCountState extends State<StreamFetch> {
   void _logout() async {
     await FirebaseAuth.instance.signOut();
   }
@@ -40,9 +40,9 @@ class _CloudCountState extends State<CloudStreamCount> {
   late int count = 0;
   void _increment() async {
     try {
-      await FirebaseFirestore.instance.doc("users/${widget.uid}").update({
-        'count': FieldValue.increment(1),
-      });
+      await FirebaseFirestore.instance.doc("users/${widget.uid}").set({
+        'count': FieldValue.increment(1), //increments count by 1 if it existed
+      }, SetOptions(merge: true)); //need setoptions in case doc doesn't exist yet
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Count updated successfully!')),
@@ -126,6 +126,7 @@ class _CloudCountState extends State<CloudStreamCount> {
               onPressed: _logout,
               child: Text('Logout (${widget.email})'),
             ),
+            SizedBox(height: 100),
           ],
         ),
       ),

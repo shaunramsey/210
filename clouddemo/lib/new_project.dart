@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:clouddemo/project.dart';
 
 class NewProject extends StatefulWidget {
   const NewProject({super.key, required this.myUid});
@@ -35,16 +34,9 @@ class _NewProjectState extends State<NewProject> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // Create a new project in Firestore
-                final newProject = Project(
-                  name: _nameController.text,
-                  description: _descriptionController.text,
-                  uid: widget.myUid,
-                );
-
                 await FirebaseFirestore.instance.collection('projects').add({
-                  'name': newProject.name,
-                  'description': newProject.description,
+                  'name': _nameController.text,
+                  'description': _descriptionController.text,
                   'assignedUsers': [widget.myUid],
                 });
 

@@ -40,9 +40,14 @@ class _CloudCountState extends State<StreamFetch> {
   late int count = 0;
   void _increment() async {
     try {
-      await FirebaseFirestore.instance.doc("users/${widget.uid}").set({
-        'count': FieldValue.increment(1), //increments count by 1 if it existed
-      }, SetOptions(merge: true)); //need setoptions in case doc doesn't exist yet
+      await FirebaseFirestore.instance.doc("users/${widget.uid}").set(
+        {
+          'count': FieldValue.increment(
+            1,
+          ), //increments count by 1 if it existed
+        },
+        SetOptions(merge: true),
+      ); //need setoptions in case doc doesn't exist yet
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Count updated successfully!')),

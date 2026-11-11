@@ -23,6 +23,36 @@ import 'package:clouddemo/new_project.dart';
 // atomic operations allow you to do things without having to READ and update based on what you read
 // add and set are going to work on dictionaries where set will overwrite
 
+//your project will start with an "end date" for access to the db
+// you can add rules to restrict access and you should do so. Here's what I used for this project
+
+/******
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Secure users/{uid} so only the matching authenticated user has access
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // 2. Secure projects/{projectId} based on the assignedUsers field
+    match /projects/{projectId} {
+      
+      // Allow read, update, and delete if the user's UID is in the project's assignedUsers array
+      allow read, update, delete: if request.auth != null 
+                                  && request.auth.uid in resource.data.assignedUsers;
+      
+      // Allow creating a project only if the creator includes their own UID in assignedUsers
+      allow create: if request.auth != null 
+                    && request.auth.uid in request.resource.data.assignedUsers;
+    }
+    
+  }
+}
+*****/
+
 class StreamFetch extends StatefulWidget {
   const StreamFetch({super.key, required this.email, required this.uid});
   final String email;

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:clouddemo/project.dart';
+import 'package:clouddemo/color_tween_text.dart';
 
 class MyProjects extends StatelessWidget {
   const MyProjects({super.key, required this.projects, required this.myUid});
@@ -12,6 +13,12 @@ class MyProjects extends StatelessWidget {
     debugPrint("Building MyProjects with ${projects.length} projects");
     return Column(
       children: [
+        ColorTweenText(
+          text: "My Projects (${projects.length})",
+          startColor: Colors.red,
+          endColor: Colors.black,
+          duration: const Duration(seconds: 2),
+        ),
         ...projects
             .map(
               (project) => ListTile(
